@@ -5,26 +5,26 @@ class PostsController < ApplicationController
   
     # GET /posts?
     def index
-      if (query_params[:sort] && query_params[:page])
+      if (params[:sort] && params[:page])
 
         # Get posts by username.
-        if (query_params[:user])
-          user = User.find_by(username: query_params[:user])
+        if (params[:user])
+          user = User.find_by(username: params[:user])
           posts = user.posts  
   
         # Get posts by tags.
-        elsif (query_params[:tags])
-          if (query_params[:tags] == [])
+        elsif (params[:tags])
+          if (params[:tags] == "[]")
             posts = Post.all
           else
-            posts = Post.where("tags @> ARRAY[?]::varchar[]", query_params[:tags])
+            posts = Post.where("tags @> ARRAY[?]::varchar[]", JSON.parse(params[:tags]))
           end
         else 
           posts = Post.all
         end
   
         # Order posts by rating or time.
-        if (query_params[:sort] == "rating")
+        if (params[:sort] == "rating")
         #   posts = posts.order("upvotes - downvotes")
         else
           posts = posts.order("created_at" => :desc)
@@ -33,7 +33,7 @@ class PostsController < ApplicationController
         # Paginate posts.
         posts = posts
           .limit(Constants::POSTS_PER_PAGE)
-          .offset(Constants::POSTS_PER_PAGE * (query_params[:page].to_i - 1))
+          .offset(Constants::POSTS_PER_PAGE * (params[:page].to_i - 1))
   
         render json: posts.map {|post| create_post_data(post)}
       else
@@ -93,10 +93,6 @@ class PostsController < ApplicationController
       def set_post
         @post = Post.find(params[:id])
       end
-
-      def query_params
-        params.require(:query).permit(:sort, :page, :user, tags: [] )
-      end
   
       def post_params
         params.require(:post).permit(:title, :content, tags: [])
@@ -106,7 +102,7 @@ class PostsController < ApplicationController
         params.require(:vote).permit(:vote)
       end
   
-      # Authenticate user's token before allowing create, update or destroy.
+      # Authenticate access token.
       def authenticate_user
         render json: {error: "Not logged in."}, status: :unauthorized if !logged_in?
       end

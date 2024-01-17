@@ -10,6 +10,10 @@ import SignIn from './features/users/SignIn';
 import Profile from './features/users/Profile';
 import EditProfile from './features/users/EditProfile';
 import SignOut from './features/users/SignOut';
+import CreatePost from './features/posts/CreatePost';
+import EditPost from './features/posts/EditPost';
+import Post from './features/posts/Post';
+import Posts from './features/posts/Posts';
 import reportWebVitals from './reportWebVitals';
 import './index.css';
 
@@ -25,7 +29,24 @@ const router = createBrowserRouter([
       { 
         path: 'posts',
         element: <Outlet />,
-        children: []
+        children: [
+          {
+            path: '',
+            element: <Posts />
+          },
+          {
+            path: ':id',
+            element: <Post />
+          },
+          {
+            path: 'create',
+            element: <CreatePost />
+          },
+          {
+            path: ':id/edit',
+            element: <EditPost />
+          }
+        ]
       },
       {
         path: 'users',

@@ -10,7 +10,7 @@ Rails.application.routes.draw do
   delete '/profile', to: 'users#destroy'
 
   # Posts routes.
-  resources :posts, only: %i[ index create update destroy ]
+  resources :posts, only: %i[ index show create update destroy ]
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.
