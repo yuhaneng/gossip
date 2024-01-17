@@ -69,9 +69,9 @@ class UsersController < ApplicationController
     def respond_auth_data(remember)
         render json: {
             user_id: @user.id,
-            access_token: create_access_token(@user),
+            access_token: create_token(@user, "ACCESS"),
             access_expiry: Time.now.to_i + Constants::ACCESS_VALIDITY,
-            refresh_token: remember ? create_refresh_token(@user) : "",
+            refresh_token: remember ? create_token(@user, "REFRESH") : "",
             refresh_expiry: Time.now.to_i + ( remember ? Constants::REFRESH_VALIDITY : 0 )
         }, status: :created
     end

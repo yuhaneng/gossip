@@ -4,14 +4,16 @@ class ApplicationController < ActionController::API
         Rails.application.credentials.jwt_key
     end
 
-    # Create access jwt with 30 min expiry.
-    def create_access_token(user)
-        JWT.encode({sub: user.id, exp: Time.now.to_i + Constants::ACCESS_VALIDITY}, jwt_key, "HS256")
-    end
-
-    # Create refresh jwt with 30 days expiry.
-    def create_refresh_token(user)
-        JWT.encode({sub: user.id, exp: Time.now.to_i + Constants::REFRESH_VALIDITY}, jwt_key, "HS256")
+    # Create access or refresh token.
+    def create_token(user, type)
+        if type == "ACCESS"
+            validity = Constants::ACCESS_VALIDITY
+        elsif type == "REFRESH"
+            validity = Constants::REFRESH_VALIDITY
+        else
+            validity = 0
+        end
+        JWT.encode({sub: user.id, exp: Time.now.to_i + validity}, jwt_key, "HS256")
     end
  
     # Decode token and check expiry.
