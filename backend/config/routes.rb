@@ -10,12 +10,15 @@ Rails.application.routes.draw do
 
   # Posts routes.
   resources :posts, only: %i[ index show create update destroy ]
+  post '/posts/:id/vote', to: 'posts#vote'
 
   # Comments routes.
   resources :comments, only: %i[ index show create update destroy ]
+  post '/comments/:id/vote', to: 'comments#vote'
 
   # Replies routes.
   resources :replies, only: %i[ index show create update destroy ]
+  post '/replies/:id/vote', to: 'replies#vote'
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.

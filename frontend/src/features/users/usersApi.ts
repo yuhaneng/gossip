@@ -122,6 +122,8 @@ const usersApi = createApi({
 
 export default usersApi;
 
+export const resetUsers = usersApi.util.resetApiState;
+
 export const { 
     useSignUpMutation,
     useSignInMutation,

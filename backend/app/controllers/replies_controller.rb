@@ -1,5 +1,5 @@
 class RepliesController < ApplicationController
-  before_action :set_reply, only: %i[ show update destroy ]
+  before_action :set_reply, only: %i[ show update destroy vote ]
   before_action :authenticate_user, except: %i[ index show ]
   before_action :correct_user, only: %i[ update destroy ]
 
@@ -26,7 +26,7 @@ class RepliesController < ApplicationController
         replies = replies
           .limit(Constants::POSTS_PER_PAGE)
           .offset(Constants::POSTS_PER_PAGE * (params[:page].to_i - 1))
-
+        
         render json: replies.map {|reply| create_reply_data(reply)}
       else
         render json: {error: "Could not get replies."}, status: :unprocessable_entity
@@ -68,22 +68,22 @@ class RepliesController < ApplicationController
     @reply.destroy!
   end
 
-  # PATCH/PUT /replies/:id/vote
-    # def vote
-    #   old_vote = current_user.reply_votes.find_by(reply_id: params[:id])
-    #   old_vote.destroy! if !old_vote.nil?
-    #   if vote_params[:vote] != "none"
-    #     vote = current_user.reply_votes.build(up?: vote_params[:vote] == "up")
-    #     @reply.reply_votes << vote
-    #     if vote.save
-    #       head :ok
-    #     else
-    #       render json: {error: "Could not create vote."}, status: :unprocessable_entity
-    #     end
-    #   else
-    #     head :ok
-    #   end
-    # end
+  # POST /replies/:id/vote
+    def vote
+      old_vote = current_user.reply_votes.find_by(reply_id: params[:id])
+      old_vote.destroy! if !old_vote.nil?
+      if vote_params[:vote] != "none"
+        vote = current_user.reply_votes.build(vote: vote_params[:vote] == "up")
+        @reply.reply_votes << vote
+        if vote.save
+          head :ok
+        else
+          render json: {error: "Could not create vote."}, status: :unprocessable_entity
+        end
+      else
+        head :ok
+      end
+    end
 
   private
     def set_reply
@@ -115,27 +115,27 @@ class RepliesController < ApplicationController
     end
 
     def create_reply_data(reply)
-       # if logged_in?
-        #   vote = current_user.reply_votes.find_by(reply_id: reply.id)
-        #   if !vote.nil? && vote.up?
-        #     user_vote = "up"
-        #   elsif !vote.nil? && !vote.up?
-        #     user_vote = "down"
-        #   else
-        #     user_vote = "none"
-        #   end
-      # else
-      # user_vote = "none"
-      # end
+      if logged_in?
+        vote = current_user.reply_votes.find_by(reply_id: reply.id)
+        if !vote.nil? && vote.vote
+          user_vote = "up"
+        elsif !vote.nil? && !vote.vote
+          user_vote = "down"
+        else
+          user_vote = "none"
+        end
+      else
+      user_vote = "none"
+      end
       reply_data = {
         id: reply.id,
         author: !reply.user.nil? ? reply.user.username : "",
         comment_id: reply.comment_id,
         post_id: reply.comment.post.id,
         content: reply.content,
-        # upvotes: reply.reply_votes.where(up?: true).count,
-        # downvotes: reply.reply_votes.where(up?: false).count,
-        # user_vote: user_vote,
+        upvotes: reply.reply_votes.where(vote: true).count,
+        downvotes: reply.reply_votes.where(vote: false).count,
+        user_vote: user_vote,
         created_at: reply.created_at,
         updated_at: reply.updated_at
       }

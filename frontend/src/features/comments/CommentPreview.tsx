@@ -1,4 +1,4 @@
-import { CommentData, useDeleteCommentMutation } from "./commentsApi";
+import { CommentData, useDeleteCommentMutation, useVoteCommentMutation } from "./commentsApi";
 import { useAppDispatch, useCheckCorrectUserRelax } from "../../app/hooks";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -25,12 +25,13 @@ export default function CommentPreview(props: {comment: CommentData}) {
     const isAuthor = useCheckCorrectUserRelax(comment ? comment.author : "");
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [showReplies, setShowReplies] = useState(false);
-    const [deleteComment, {isSuccess, isLoading, error}] = useDeleteCommentMutation();
+    const [deleteComment, {isSuccess: deleteSuccess, isLoading: deleteLoading, error: deleteError}] = useDeleteCommentMutation();
+    const [voteComment, {isSuccess: voteSuccess, isLoading: voteLoading, error: voteError}] = useVoteCommentMutation();
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (isSuccess) {
+        if (deleteSuccess) {
             dispatch(createAlert({
                 severity : "success",
                 alert: "Comment deleted successfully."
@@ -38,13 +39,20 @@ export default function CommentPreview(props: {comment: CommentData}) {
             navigate(0)
         }
 
-        if (error) {
+        if (deleteError) {
             dispatch(createAlert({
                 severity: "error",
-                alert: getErrorMessage(error)
+                alert: getErrorMessage(deleteError)
             }));
         }
-    }, [isSuccess, error])
+
+        if (voteError) {
+            dispatch(createAlert({
+                severity: "error",
+                alert: getErrorMessage(voteError)
+            }));
+        }
+    }, [deleteSuccess, deleteError, voteError])
 
     const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
@@ -53,6 +61,14 @@ export default function CommentPreview(props: {comment: CommentData}) {
     const handleClose = () => {
         setAnchorEl(null);
     };
+
+    function handleVote(vote: "up" | "down") {
+        if (comment.user_vote === vote) {
+            voteComment({id: comment.id, vote: "none"})
+        } else {
+            voteComment({id: comment.id, vote: vote})
+        }
+    }
 
     return (
         <Container 
@@ -117,11 +133,25 @@ export default function CommentPreview(props: {comment: CommentData}) {
                 comment.created_at.slice(0,10) + 
                 (comment.updated_at !== comment.created_at ? ` ( Edited ${comment.updated_at.slice(0,10)} )` : "")}
             </Typography>
-            <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
-                <ThumbUp sx={{color: "#AAA", fontSize: "0.8em"}}/>
+            <Box sx={{display: 'flex', alignItems: 'center', gap: 1, mt: 1}}>
+                <ThumbUp 
+                    onClick={() => handleVote("up")} 
+                    sx={{
+                        color: comment.user_vote === "up" ? "#1976d2": "#AAA", 
+                        fontSize: "0.8em", 
+                        '&:hover': {color: comment.user_vote === "up" ? "#1976d2": "#666", }
+                    }}
+                />
                 <Typography variant="caption" color="#888">{comment.upvotes}</Typography>
                 <Typography variant="caption" color="#888"> • </Typography>
-                <ThumbDown sx={{color: "#AAA", fontSize: "0.8em"}}/>
+                <ThumbDown 
+                    onClick={() => handleVote("down")} 
+                    sx={{
+                        color: comment.user_vote === "down" ? "#f44336": "#AAA", 
+                        fontSize: "0.8em", 
+                        '&:hover': {color: comment.user_vote === "down" ? "#f44336": "#666", }
+                    }}
+                />
                 <Typography variant="caption" color="#888">{comment.downvotes}</Typography>
             </Box>
             <Button

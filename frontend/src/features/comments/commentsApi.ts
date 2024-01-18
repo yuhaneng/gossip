@@ -100,7 +100,7 @@ const commentsApi = createApi({
         voteComment: builder.mutation<void, VoteCommentData>({
             query: (voteData) => ({
                 url: `/${voteData.id}/vote`,
-                method: "PUT",
+                method: "POST",
                 body: {
                     vote: {
                         vote: voteData.vote
@@ -113,6 +113,8 @@ const commentsApi = createApi({
 })
 
 export default commentsApi;
+
+export const resetComments = commentsApi.util.resetApiState;
 
 export const {
     useGetCommentsByPostQuery,
