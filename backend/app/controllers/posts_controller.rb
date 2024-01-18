@@ -96,6 +96,7 @@ class PostsController < ApplicationController
       # Find specified post before update or destroy.
       def set_post
         @post = Post.find(params[:id])
+        render json: {error: "Could not find post."}, status: :unprocessable_entity if @post.nil?
       end
   
       def post_params

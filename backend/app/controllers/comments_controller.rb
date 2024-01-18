@@ -1,15 +1,9 @@
 class CommentsController < ApplicationController
   before_action :set_comment, only: %i[ show update destroy ]
   before_action :authenticate_user, except: %i[ index show ]
-  before_action :correct_user, only: %i[ update destroy]
+  before_action :correct_user, only: %i[ update destroy ]
 
   # GET /comments
-  def index
-    @comments = Comment.all
-
-    render json: @comments
-  end
-
   def index
     if (params[:sort] && params[:page])
 
@@ -69,7 +63,7 @@ class CommentsController < ApplicationController
     if @comment.update(edit_params)
       head :ok
     else
-      render json: {error: "Comment could not be created."}, status: :unprocessable_entity
+      render json: {error: "Comment could not be edited."}, status: :unprocessable_entity
     end
   end
 
@@ -78,9 +72,27 @@ class CommentsController < ApplicationController
     @comment.destroy!
   end
 
+  # PATCH/PUT /comments/:id/vote
+    # def vote
+    #   old_vote = current_user.comment_votes.find_by(comment_id: params[:id])
+    #   old_vote.destroy! if !old_vote.nil?
+    #   if vote_params[:vote] != "none"
+    #     vote = current_user.comment_votes.build(up?: vote_params[:vote] == "up")
+    #     @comment.comment_votes << vote
+    #     if vote.save
+    #       head :ok
+    #     else
+    #       render json: {error: "Could not create vote."}, status: :unprocessable_entity
+    #     end
+    #   else
+    #     head :ok
+    #   end
+    # end
+
   private
     def set_comment
       @comment = Comment.find(params[:id])
+      render json: {error: "Could not find comment."}, status: :unprocessable_entity if @comment.nil?
     end
 
     def comment_params
@@ -89,6 +101,10 @@ class CommentsController < ApplicationController
 
     def edit_params
       params.require(:comment).permit(:content)
+    end
+
+    def vote_params
+      params.require(:vote).permit(:vote)
     end
 
     # Authenticate access token.
