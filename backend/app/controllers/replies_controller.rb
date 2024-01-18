@@ -5,7 +5,7 @@ class RepliesController < ApplicationController
 
   # GET /replies
   def index
-    if (params[:sort] && params[:page])
+    if (params[:page])
 
       # Get replies by username.
       if (params[:user])
@@ -19,12 +19,8 @@ class RepliesController < ApplicationController
       end
 
       if replies
-        # Order replies by rating or time.
-        if (params[:sort] == "rating")
-        #   replies = replies.order("upvotes - downvotes")
-        else
-          replies = replies.order("created_at" => :desc)
-        end
+        # Order replies by time.
+        replies = replies.order("created_at" => :desc)
 
         # Paginate replies.
         replies = replies
@@ -135,6 +131,7 @@ class RepliesController < ApplicationController
         id: reply.id,
         author: !reply.user.nil? ? reply.user.username : "",
         comment_id: reply.comment_id,
+        post_id: reply.comment.post.id,
         content: reply.content,
         # upvotes: reply.reply_votes.where(up?: true).count,
         # downvotes: reply.reply_votes.where(up?: false).count,

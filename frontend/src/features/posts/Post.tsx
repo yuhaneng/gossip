@@ -94,6 +94,7 @@ export default function Post() {
             >
                 {post && (
                     <Box >
+                        <Box sx={{border: '1px solid #EEE', p: 4, borderRadius: 3}}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                 <Typography variant="h3" component="h2" sx={{fontSize: '3em', fontWeight: 800, mb: 0.5}}>
                                     {post.title}
@@ -176,8 +177,15 @@ export default function Post() {
                                     Back To Posts
                                 </Button>
                             </Link>
-                        <Divider sx={{mt: 7}}/>
-                        <Comments postId={id} />
+                        </Box>
+                        <Divider sx={{mt: 8}}/>
+                        <Box sx={{
+                            mt: 1,
+                            pl: 1, 
+                            pr: 1, 
+                        }}>
+                            <Comments postId={id} />
+                        </Box>
                     </Box>
                 )}
             </Box>

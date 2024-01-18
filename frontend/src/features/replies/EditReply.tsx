@@ -1,4 +1,4 @@
-import { useEditCommentMutation, useGetCommentQuery } from './commentsApi';
+import { useEditReplyMutation, useGetReplyQuery } from './repliesApi';
 import { useAppDispatch, useCheckCorrectUserStrict, useCheckSignedIn } from '../../app/hooks';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
@@ -13,26 +13,26 @@ import {
 
 export default function EditComment() {
     const {id = "0"} = useParams();
-    const {data: oldComment, isLoading: commentLoading, error: commentError} = useGetCommentQuery(id)
+    const {data: oldReply, isLoading: replyLoading, error: replyError} = useGetReplyQuery(id)
     useCheckSignedIn();
-    useCheckCorrectUserStrict(oldComment ? oldComment.author : "");
+    useCheckCorrectUserStrict(oldReply ? oldReply.author : "");
 
-    const [edit, {isSuccess: editSuccess, isLoading: editLoading, error: editError}] = useEditCommentMutation();
+    const [edit, {isSuccess: editSuccess, isLoading: editLoading, error: editError}] = useEditReplyMutation();
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const [content, setContent] = useState("")
     const [contentError, setContentError] = useState(false);
 
     useEffect(() => {
-        if (commentError) {
+        if (replyError) {
             dispatch(createAlert({
                 severity: "error",
-                alert: getErrorMessage(commentError)
+                alert: getErrorMessage(replyError)
             }));
         } 
 
-        if (oldComment) {
-            setContent(oldComment.content);
+        if (oldReply) {
+            setContent(oldReply.content);
         }
 
         if (editError) {
@@ -45,11 +45,11 @@ export default function EditComment() {
         if (editSuccess) {
             dispatch(createAlert({
                 severity : "success",
-                alert: "Comment created successfully."
+                alert: "Reply created successfully."
             }));
-            navigate(oldComment ? `/posts/${oldComment.post_id}` : '/posts');
+            navigate(oldReply ? `/posts/${oldReply.post_id}` : '/posts');
         }
-    }, [commentError, oldComment, editError, editSuccess])
+    }, [replyError, oldReply, editError, editSuccess])
 
     function handleInput(event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
         setContent(event.target.value);
@@ -76,7 +76,7 @@ export default function EditComment() {
         if (isValid) {
             edit({
                 id: id,
-                postId: oldComment ? oldComment.post_id : "0",
+                commentId: oldReply ? oldReply.comment_id : "0",
                 content: content,
             });
         } else {
@@ -99,7 +99,7 @@ export default function EditComment() {
                 }}
             >
                 <Typography component="h1" variant="h5">
-                    Edit Comment
+                    Edit Reply
                 </Typography>
                 <Box component="form" noValidate sx={{ mt: 1, width: "80%"}}>
                     <TextField
@@ -124,9 +124,9 @@ export default function EditComment() {
                         sx={{ mt: 3 }}
                         onClick={handleEdit}
                     >
-                        Edit Comment
+                        Edit Reply
                     </Button>
-                    <Link to={oldComment ? `/posts/${oldComment.post_id}` : '/posts'}>
+                    <Link to={oldReply ? `/posts/${oldReply.comment_id}` : '/posts'}>
                         <Button
                             fullWidth
                             variant="contained"

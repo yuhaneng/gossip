@@ -18,9 +18,8 @@ export interface CreateCommentData {
     content: string
 }
 
-export interface EditCommentData {
-    id: string,
-    content: string
+export interface EditCommentData extends CreateCommentData {
+    id: string
 }
 
 export interface VoteCommentData {
@@ -28,7 +27,7 @@ export interface VoteCommentData {
     vote: "up" | "down" | "none"
 }
 
-export interface CommentData extends EditCommentData {
+export interface CommentData extends Omit<EditCommentData, 'postId'> {
     post_id: string,
     author: string,
     upvotes: number,
@@ -52,15 +51,15 @@ const commentsApi = createApi({
             return headers
         }
      }),
-    tagTypes: ["Comment"],
+    tagTypes: ["Comment", "PostComments", "UserComments"],
     endpoints: (builder) => ({
         getCommentsByPost: builder.query<CommentData[], GetCommentsByPostData>({
             query: (getData) => `?post_id=${getData.postId}&page=${getData.page}&sort=${getData.sortBy}`,
-            providesTags: (result = []) => ["Comment", ...result.map((comment) => ({type: "Comment" as const, id: comment.id}))]
+            providesTags: (result = [], error, arg) => [{type: "PostComments", id: arg.postId}, ...result.map((comment) => ({type: "Comment" as const, id: comment.id}))]
         }),
         getCommentsByUser: builder.query<CommentData[], GetCommentsByUserData>({
             query: (getData) => `?user=${getData.user}&page=${getData.page}&sort=${getData.sortBy}`,
-            providesTags: (result = []) => ["Comment", ...result.map((comment) => ({type: "Comment" as const, id: comment.id}))]
+            providesTags: (result = []) => ["UserComments", ...result.map((comment) => ({type: "Comment" as const, id: comment.id}))]
         }),
         getComment: builder.query<CommentData, string>({
             query: (id) => `/${id}`,
@@ -77,7 +76,7 @@ const commentsApi = createApi({
                     }
                 }
             }),
-            invalidatesTags: ["Comment"]
+            invalidatesTags: (result, error, arg) => [{type: "PostComments", id: arg.postId}, "UserComments"]
         }),
         editComment: builder.mutation<void, EditCommentData>({
             query: (editData) => ({
@@ -96,7 +95,7 @@ const commentsApi = createApi({
                 url: `/${id}`,
                 method: 'DELETE'
             }),
-            invalidatesTags: ["Comment"]
+            invalidatesTags: (result, error, arg) => [{type: "PostComments", id: arg}, "UserComments"]
         }),
         voteComment: builder.mutation<void, VoteCommentData>({
             query: (voteData) => ({
