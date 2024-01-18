@@ -8,7 +8,8 @@ import {
     Container,
     Box,
     Typography,
-    Button
+    Button,
+    Divider
  } from '@mui/material';
 
 export default function Comments(props: {postId: string}) {
@@ -74,7 +75,11 @@ export default function Comments(props: {postId: string}) {
                     </Button>
                 </Box>
                 { comments && (<Box sx={{width: '100%'}}>
-                    { comments.map((comment) => <CommentPreview comment={comment}></CommentPreview>)}
+                    { comments.map((comment) => (
+                        <Box>
+                            <CommentPreview comment={comment}></CommentPreview>
+                        </Box>
+                    ))}
                 </Box>)}
             </Box>
         </Container>

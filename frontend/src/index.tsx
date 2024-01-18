@@ -16,6 +16,8 @@ import Post from './features/posts/Post';
 import Posts from './features/posts/Posts';
 import CreateComment from './features/comments/CreateComment';
 import EditComment from './features/comments/EditComment';
+import CreateReply from './features/replies/CreateReply';
+import EditReply from './features/replies/EditReply';
 import reportWebVitals from './reportWebVitals';
 import './index.css';
 
@@ -87,6 +89,20 @@ const router = createBrowserRouter([
           {
             path: ':id/edit',
             element: <EditComment />
+          }
+        ]
+      },
+      {
+        path: 'replies',
+        element: <Outlet />,
+        children: [
+          {
+            path: 'create/:postId/:commentId',
+            element: <CreateReply />
+          },
+          {
+            path: ':id/edit',
+            element: <EditReply />
           }
         ]
       }

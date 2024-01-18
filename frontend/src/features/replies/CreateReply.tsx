@@ -1,5 +1,5 @@
-import { useEditCommentMutation, useGetCommentQuery } from './commentsApi';
-import { useAppDispatch, useCheckCorrectUserStrict, useCheckSignedIn } from '../../app/hooks';
+import { useCreateReplyMutation } from './repliesApi';
+import { useAppDispatch, useCheckSignedIn } from '../../app/hooks';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { createAlert, getErrorMessage } from '../alert/alertSlice';
@@ -11,45 +11,31 @@ import {
     TextField
 } from '@mui/material';
 
-export default function EditComment() {
-    const {id = "0"} = useParams();
-    const {data: oldComment, isLoading: commentLoading, error: commentError} = useGetCommentQuery(id)
+export default function CreateComment() {
+    const {postId = "0", commentId = "0"} = useParams();
     useCheckSignedIn();
-    useCheckCorrectUserStrict(oldComment ? oldComment.author : "");
-
-    const [edit, {isSuccess: editSuccess, isLoading: editLoading, error: editError}] = useEditCommentMutation();
+    const [create, {isSuccess, isLoading, error}] = useCreateReplyMutation();
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const [content, setContent] = useState("")
     const [contentError, setContentError] = useState(false);
 
     useEffect(() => {
-        if (commentError) {
+        if (error) {
             dispatch(createAlert({
                 severity: "error",
-                alert: getErrorMessage(commentError)
+                alert: getErrorMessage(error)
             }));
         } 
 
-        if (oldComment) {
-            setContent(oldComment.content);
-        }
-
-        if (editError) {
-            dispatch(createAlert({
-                severity: "error",
-                alert: getErrorMessage(editError)
-            }));
-        }
-
-        if (editSuccess) {
+        if (isSuccess) {
             dispatch(createAlert({
                 severity : "success",
-                alert: "Comment created successfully."
+                alert: "Reply created successfully."
             }));
-            navigate(oldComment ? `/posts/${oldComment.post_id}` : '/posts');
+            navigate(`/posts/${postId}`);
         }
-    }, [commentError, oldComment, editError, editSuccess])
+    }, [error, isSuccess])
 
     function handleInput(event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
         setContent(event.target.value);
@@ -71,12 +57,11 @@ export default function EditComment() {
         return {isValid, error};
     }
 
-    function handleEdit() {
+    function handleCreate() {
         const {isValid, error} = validateInput();
         if (isValid) {
-            edit({
-                id: id,
-                postId: oldComment ? oldComment.post_id : "0",
+            create({
+                commentId: commentId,
                 content: content,
             });
         } else {
@@ -99,7 +84,7 @@ export default function EditComment() {
                 }}
             >
                 <Typography component="h1" variant="h5">
-                    Edit Comment
+                    Create Reply
                 </Typography>
                 <Box component="form" noValidate sx={{ mt: 1, width: "80%"}}>
                     <TextField
@@ -122,11 +107,11 @@ export default function EditComment() {
                         fullWidth
                         variant="contained"
                         sx={{ mt: 3 }}
-                        onClick={handleEdit}
+                        onClick={handleCreate}
                     >
-                        Edit Comment
+                        Create Reply
                     </Button>
-                    <Link to={oldComment ? `/posts/${oldComment.post_id}` : '/posts'}>
+                    <Link to={`/posts/${postId}`}>
                         <Button
                             fullWidth
                             variant="contained"

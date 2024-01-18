@@ -98,7 +98,7 @@ const postsApi = createApi({
                 url: `/${id}`,
                 method: 'DELETE'
             }),
-            invalidatesTags: ["Post"]
+            invalidatesTags: (result, error, arg) => [{type: "Post", id: arg}]
         }),
         votePost: builder.mutation<void, VotePostData>({
             query: (voteData) => ({

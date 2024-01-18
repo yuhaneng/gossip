@@ -1,18 +1,16 @@
-import { CommentData, useDeleteCommentMutation } from "./commentsApi";
-import { useAppDispatch, useCheckCorrectUserRelax } from "../../app/hooks";
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useAppDispatch, useCheckCorrectUserRelax } from "../../app/hooks";
+import { ReplyData, useDeleteReplyMutation } from "./repliesApi";
+import { useNavigate } from "react-router-dom";
 import { createAlert, getErrorMessage } from "../alert/alertSlice";
-import Replies from "../replies/Replies";
+import { Link } from "react-router-dom";
 import { 
     Container,
     Box,
     Typography,
     IconButton,
     Menu,
-    MenuItem,
-    Button,
-    Divider
+    MenuItem
  } from '@mui/material';
  import {
     ThumbUp,
@@ -20,12 +18,11 @@ import {
     MoreVert
 } from '@mui/icons-material'
 
-export default function CommentPreview(props: {comment: CommentData}) {
-    const comment = props.comment;
-    const isAuthor = useCheckCorrectUserRelax(comment ? comment.author : "");
+export default function ReplyPreview(props: {reply: ReplyData}) {
+    const reply = props.reply;
+    const isAuthor = useCheckCorrectUserRelax(reply ? reply.author : "");
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const [showReplies, setShowReplies] = useState(false);
-    const [deleteComment, {isSuccess, isLoading, error}] = useDeleteCommentMutation();
+    const [deleteReply, {isSuccess, isLoading, error}] = useDeleteReplyMutation();
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
@@ -57,22 +54,20 @@ export default function CommentPreview(props: {comment: CommentData}) {
     return (
         <Container 
             maxWidth="sm" 
-            key={comment.id}
+            key={reply.id}
             sx={{
-                width: "100%", 
+                width: "108%", 
                 mb: 3, 
-                borderRadius: 2, 
-                p: 2,
-                border: '1px solid #EEE'
+                mt: 2
             }}
         >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, mb: 2 }}>
                 <Typography component="p" >
-                    {comment.content}
+                    {reply.content}
                 </Typography>
-                <Box>
+                {isAuthor && <Box>
                     <IconButton
-                        size="small"
+                        size="large"
                         aria-label="options"
                         aria-controls="menu-appbar"
                         aria-haspopup="true"
@@ -97,46 +92,27 @@ export default function CommentPreview(props: {comment: CommentData}) {
                         open={Boolean(anchorEl)}
                         onClose={handleClose}
                     >
-                        <Link to={`/replies/create/${comment.post_id}/${comment.id}`} style={{textDecoration: 'none', color: 'inherit'}}>
-                            <MenuItem>Reply Comment</MenuItem>
+                        <Link to={`/replies/${reply.id}/edit`} style={{textDecoration: 'none', color: 'inherit'}}>
+                            <MenuItem>Edit Reply</MenuItem>
                         </Link>
-                        {isAuthor && (
-                            <Box>
-                                <Link to={`/comments/${comment.id}/edit`} style={{textDecoration: 'none', color: 'inherit'}}>
-                                    <MenuItem>Edit Comment</MenuItem>
-                                </Link>
-                                <MenuItem onClick={() => deleteComment(comment.id)}>Delete Comment</MenuItem>
-                            </Box>
-                        )}
+
+                        <MenuItem onClick={() => deleteReply(reply.id)}>Delete Reply</MenuItem>
                     </Menu>
-                </Box>
+                </Box>}
             </Box>
             <Typography variant="caption" color="#666">
-                {( comment.author ? comment.author : "[Deleted Account]" ) + 
+                {( reply.author ? reply.author : "[Deleted Account]" ) + 
                 " • " + 
-                comment.created_at.slice(0,10) + 
-                (comment.updated_at !== comment.created_at ? ` ( Edited ${comment.updated_at.slice(0,10)} )` : "")}
+                reply.created_at.slice(0,10) + 
+                (reply.updated_at !== reply.created_at ? ` ( Edited ${reply.updated_at.slice(0,10)} )` : "")}
             </Typography>
             <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
                 <ThumbUp sx={{color: "#AAA", fontSize: "0.8em"}}/>
-                <Typography variant="caption" color="#888">{comment.upvotes}</Typography>
+                <Typography variant="caption" color="#888">{reply.upvotes}</Typography>
                 <Typography variant="caption" color="#888"> • </Typography>
                 <ThumbDown sx={{color: "#AAA", fontSize: "0.8em"}}/>
-                <Typography variant="caption" color="#888">{comment.downvotes}</Typography>
+                <Typography variant="caption" color="#888">{reply.downvotes}</Typography>
             </Box>
-            <Button
-                variant="text"
-                size="small"
-                onClick={() => setShowReplies(!showReplies)}
-                sx={{mt: 2, fontSize: '0.75em', ml: '-5px'}}
-            >
-                {showReplies ? "Hide Replies" : "Show Replies"}
-            </Button>
-            {showReplies && (
-                <Box sx={{display: 'flex', justifyContent: 'space-between', gap: 0}}>
-                    <Replies commentId={comment.id}/>
-                </Box>
-            )}
         </Container>
     )
 }
