@@ -1,5 +1,5 @@
 class PostsController < ApplicationController
-    before_action :set_post, only: %i[ show update destroy ] #vote
+    before_action :set_post, only: %i[ show update destroy vote]
     before_action :authenticate_user, except: %i[ index show ]
     before_action :correct_user, only: %i[ update destroy ]
   
@@ -26,17 +26,24 @@ class PostsController < ApplicationController
         if posts
           # Order posts by rating or time.
           if (params[:sort] == "rating")
-          #   posts = posts.order("upvotes - downvotes")
+            posts = posts.sort_by { |post| 
+              post.post_votes.where(vote: true).count - post.post_votes.where(vote: false).count
+            }
           else
-            posts = posts.order("created_at" => :desc)
+            posts = posts.order(created_at: :desc)
           end
     
           # Paginate posts.
-          posts = posts
-            .limit(Constants::POSTS_PER_PAGE)
-            .offset(Constants::POSTS_PER_PAGE * (params[:page].to_i - 1))
-    
-          render json: posts.map {|post| create_post_data(post)}
+          posts = posts.slice(
+            Constants::POSTS_PER_PAGE * (params[:page].to_i - 1), 
+            Constants::POSTS_PER_PAGE * params[:page].to_i
+          )
+          
+          if posts
+            render json: posts.map {|post| create_post_data(post)}
+          else
+            render json: []
+          end
         else
           render json: {error: "Could not get posts."}, status: :unprocessable_entity
         end
@@ -75,22 +82,22 @@ class PostsController < ApplicationController
       @post.destroy!
     end
   
-    # PATCH/PUT /posts/:id/vote
-    # def vote
-    #   old_vote = current_user.post_votes.find_by(post_id: params[:id])
-    #   old_vote.destroy! if !old_vote.nil?
-    #   if vote_params[:vote] != "none"
-    #     vote = current_user.post_votes.build(up?: vote_params[:vote] == "up")
-    #     @post.post_votes << vote
-    #     if vote.save
-    #       head :ok
-    #     else
-    #       render json: {error: "Could not create vote."}, status: :unprocessable_entity
-    #     end
-    #   else
-    #     head :ok
-    #   end
-    # end
+    # POST /posts/:id/vote
+    def vote
+      old_vote = current_user.post_votes.find_by(post_id: params[:id])
+      old_vote.destroy! if !old_vote.nil?
+      if vote_params[:vote] != "none"
+        vote = current_user.post_votes.build(vote: vote_params[:vote] == "up")
+        @post.post_votes << vote
+        if vote.save
+          head :ok
+        else
+          render json: {error: "Could not create vote."}, status: :unprocessable_entity
+        end
+      else
+        head :ok
+      end
+    end
   
     private
       # Find specified post before update or destroy.
@@ -119,27 +126,27 @@ class PostsController < ApplicationController
       end
   
       def create_post_data(post)
-          # if logged_in?
-          #   vote = current_user.post_votes.find_by(post_id: post.id)
-          #   if !vote.nil? && vote.up?
-          #     user_vote = "up"
-          #   elsif !vote.nil? && !vote.up?
-          #     user_vote = "down"
-          #   else
-          #     user_vote = "none"
-          #   end
-          # else
-          #   user_vote = "none"
-          # end
+          if logged_in?
+            vote = current_user.post_votes.find_by(post_id: post.id)
+            if !vote.nil? && vote.vote
+              user_vote = "up"
+            elsif !vote.nil? && !vote.vote
+              user_vote = "down"
+            else
+              user_vote = "none"
+            end
+          else
+            user_vote = "none"
+          end
         post_data = {
             id: post.id,
             author: !post.user.nil? ? post.user.username : "",
             title: post.title, 
             content: post.content, 
             tags: post.tags,
-            # upvotes: post.post_votes.where(up?: true).count,
-            # downvotes: post.post_votes.where(up?: false).count,
-            # user_vote: user_vote,
+            upvotes: post.post_votes.where(vote: true).count,
+            downvotes: post.post_votes.where(vote: false).count,
+            user_vote: user_vote,
             created_at: post.created_at,
             updated_at: post.updated_at,
         }

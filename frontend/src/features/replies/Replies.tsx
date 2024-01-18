@@ -1,17 +1,20 @@
 import { useEffect, useState } from 'react';
-import { useGetRepliesByCommentQuery } from './repliesApi';
+import { ReplyData, useGetRepliesByCommentQuery } from './repliesApi';
 import { useAppDispatch } from '../../app/hooks';
 import { createAlert, getErrorMessage } from '../alert/alertSlice';
 import ReplyPreview from './ReplyPreview';
 import { 
     Container,
     Box,
-    Divider
+    Divider,
+    Button
  } from '@mui/material';
 
 export default function Replies(props: {commentId: string}) {
     const [page, setPage] = useState(1);
-    const { data: replies, isLoading, error } = useGetRepliesByCommentQuery({
+    const [replies, setReplies] = useState<ReplyData[]>([]);
+    const [isLastPage, setIsLastPage] = useState(false);
+    const { data: repliesPage, isLoading, error } = useGetRepliesByCommentQuery({
         page: page,
         commentId: props.commentId
     });
@@ -26,6 +29,16 @@ export default function Replies(props: {commentId: string}) {
         }
     }, [error])
 
+    useEffect(() => {
+        if (repliesPage) {
+            if (repliesPage.length === 0) {
+                setIsLastPage(true);
+            } else {
+                setReplies([...replies, ...repliesPage])
+            }
+        }
+    }, [repliesPage])
+
     return (
         <Container maxWidth="sm" sx={{
             display: 'flex',
@@ -33,14 +46,25 @@ export default function Replies(props: {commentId: string}) {
             alignItems: 'center'
         }}
         >
-            { replies && (<Box sx={{width: '100%'}}>
-                { replies.map((reply) => (
-                    <Box sx={{mt: 3}}>
-                        <Divider variant="middle" sx={{mb: 3}}/>
-                        <ReplyPreview reply={reply}></ReplyPreview>
-                    </Box>
-                ))}
-            </Box>)}
+            { replies && (
+                <Box sx={{width: '100%'}}>
+                    { replies.map((reply) => (
+                        <Box sx={{mt: 3}}>
+                            <Divider variant="middle" sx={{mb: 3}}/>
+                            <ReplyPreview reply={reply}></ReplyPreview>
+                        </Box>
+                    ))}
+                    <Divider variant="middle" sx={{mb: 3}}/>
+                    <Button 
+                        variant="text" 
+                        onClick={() => setPage(page + 1)}
+                        disabled={isLastPage}
+                        sx={{mt: 1, ml: -3, fontSize: '0.75em'}}
+                    >
+                        Show More Replies
+                    </Button>
+                </Box>
+            )}
         </Container>
     )
 }

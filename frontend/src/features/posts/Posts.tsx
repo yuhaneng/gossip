@@ -18,13 +18,15 @@ export default function Posts() {
     const [page, setPage] = useState(1);
     const [sortBy, setSortBy] = useState<"time" | "rating">("time");
     const [tags, setTags] = useState<string[]>([]);
-    const {data: posts, isLoading, error } = useGetPostsByTagsQuery({
+    const {data: postsPage, isLoading, error } = useGetPostsByTagsQuery({
         page: page,
         sortBy: sortBy,
         tags: tags
     });
+    const [posts, setPosts] = useState<PostData[]>([])
     const [searchbar, setSearchbar] = useState("");
     const dispatch = useAppDispatch();
+    const [test, setTest] = useState(false);
 
     useEffect(() => {
         if (error) {
@@ -34,6 +36,30 @@ export default function Posts() {
             }));
         }
     }, [error])
+
+    useEffect(() => {
+        if (postsPage) {
+            setPosts([...posts, ...postsPage])
+        }
+    }, [postsPage])
+
+    useEffect(() => {
+        const handleScroll = () => {
+            const offsetHeight = document.documentElement.offsetHeight;
+            const innerHeight = window.innerHeight;
+            const scrollTop = document.documentElement.scrollTop;
+        
+            const hasReachedBottom = offsetHeight - (innerHeight + scrollTop) <= 10;
+        
+            if (hasReachedBottom) {
+                setPage(page + 1);
+            }
+        };
+      
+        window.addEventListener("scroll", handleScroll);
+      
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
 
     function handleAddTag() {
         setTags(tags.concat(searchbar));

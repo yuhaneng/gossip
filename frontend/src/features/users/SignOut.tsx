@@ -1,6 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch } from "../../app/hooks";
 import { setCookies } from "./cookiesSlice";
+import { resetUsers } from "./usersApi";
+import { resetPosts } from "../posts/postsApi";
+import { resetComments } from "../comments/commentsApi";
+import { resetReplies } from "../replies/repliesApi";
 import {
     Container,
     Box,
@@ -13,6 +17,10 @@ export default function SignOut() {
     const dispatch = useAppDispatch();
 
     function handleSignOut() {
+        dispatch(resetUsers());
+        dispatch(resetPosts());
+        dispatch(resetComments());
+        dispatch(resetReplies());
         dispatch(setCookies({
             type: "signOut"
         }));

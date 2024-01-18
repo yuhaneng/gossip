@@ -1,5 +1,5 @@
 class CommentsController < ApplicationController
-  before_action :set_comment, only: %i[ show update destroy ]
+  before_action :set_comment, only: %i[ show update destroy vote ]
   before_action :authenticate_user, except: %i[ index show ]
   before_action :correct_user, only: %i[ update destroy ]
 
@@ -21,17 +21,24 @@ class CommentsController < ApplicationController
       if comments
         # Order comments by rating or time.
         if (params[:sort] == "rating")
-        #   comments = comments.order("upvotes - downvotes")
+          comments = comments.sort_by { |comment| 
+            comment.comment_votes.where(vote: true).count - comment.comment_votes.where(vote: false).count
+          }
         else
           comments = comments.order("created_at" => :desc)
         end
 
         # Paginate commments.
-        comments = comments
-          .limit(Constants::POSTS_PER_PAGE)
-          .offset(Constants::POSTS_PER_PAGE * (params[:page].to_i - 1))
+        comments = comments.slice(
+          Constants::POSTS_PER_PAGE * (params[:page].to_i - 1), 
+          Constants::POSTS_PER_PAGE * params[:page].to_i
+        )
 
-        render json: comments.map {|comment| create_comment_data(comment)}
+        if comments
+          render json: comments.map {|comment| create_comment_data(comment)}
+        else
+          render json: []
+        end
       else
         render json: {error: "Could not get comments."}, status: :unprocessable_entity
       end
@@ -72,22 +79,22 @@ class CommentsController < ApplicationController
     @comment.destroy!
   end
 
-  # PATCH/PUT /comments/:id/vote
-    # def vote
-    #   old_vote = current_user.comment_votes.find_by(comment_id: params[:id])
-    #   old_vote.destroy! if !old_vote.nil?
-    #   if vote_params[:vote] != "none"
-    #     vote = current_user.comment_votes.build(up?: vote_params[:vote] == "up")
-    #     @comment.comment_votes << vote
-    #     if vote.save
-    #       head :ok
-    #     else
-    #       render json: {error: "Could not create vote."}, status: :unprocessable_entity
-    #     end
-    #   else
-    #     head :ok
-    #   end
-    # end
+  # POST /comments/:id/vote
+  def vote
+    old_vote = current_user.comment_votes.find_by(comment_id: params[:id])
+    old_vote.destroy! if !old_vote.nil?
+    if vote_params[:vote] != "none"
+      vote = current_user.comment_votes.build(vote: vote_params[:vote] == "up")
+      @comment.comment_votes << vote
+      if vote.save
+        head :ok
+      else
+        render json: {error: "Could not create vote."}, status: :unprocessable_entity
+      end
+    else
+      head :ok
+    end
+  end
 
   private
     def set_comment
@@ -119,26 +126,26 @@ class CommentsController < ApplicationController
     end
 
     def create_comment_data(comment)
-       # if logged_in?
-        #   vote = current_user.comment_votes.find_by(comment_id: comment.id)
-        #   if !vote.nil? && vote.up?
-        #     user_vote = "up"
-        #   elsif !vote.nil? && !vote.up?
-        #     user_vote = "down"
-        #   else
-        #     user_vote = "none"
-        #   end
-      # else
-      # user_vote = "none"
-      # end
+      if logged_in?
+        vote = current_user.comment_votes.find_by(comment_id: comment.id)
+        if !vote.nil? && vote.vote
+          user_vote = "up"
+        elsif !vote.nil? && !vote.vote
+          user_vote = "down"
+        else
+          user_vote = "none"
+        end
+      else
+      user_vote = "none"
+      end
       comment_data = {
         id: comment.id,
         author: !comment.user.nil? ? comment.user.username : "",
         post_id: comment.post_id,
         content: comment.content,
-        # upvotes: comment.comment_votes.where(up?: true).count,
-        # downvotes: comment.comment_votes.where(up?: false).count,
-        # user_vote: user_vote,
+        upvotes: comment.comment_votes.where(vote: true).count,
+        downvotes: comment.comment_votes.where(vote: false).count,
+        user_vote: user_vote,
         created_at: comment.created_at,
         updated_at: comment.updated_at
       }

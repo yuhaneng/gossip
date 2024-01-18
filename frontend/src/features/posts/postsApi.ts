@@ -103,7 +103,7 @@ const postsApi = createApi({
         votePost: builder.mutation<void, VotePostData>({
             query: (voteData) => ({
                 url: `/${voteData.id}/vote`,
-                method: "PUT",
+                method: "POST",
                 body: {
                     vote: {
                         vote: voteData.vote
@@ -116,6 +116,8 @@ const postsApi = createApi({
 })
 
 export default postsApi;
+
+export const resetPosts = postsApi.util.resetApiState;
 
 export const { 
     useGetPostsByTagsQuery, 

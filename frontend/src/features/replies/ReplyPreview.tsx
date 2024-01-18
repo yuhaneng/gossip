@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAppDispatch, useCheckCorrectUserRelax } from "../../app/hooks";
-import { ReplyData, useDeleteReplyMutation } from "./repliesApi";
+import { ReplyData, useDeleteReplyMutation, useVoteReplyMutation } from "./repliesApi";
 import { useNavigate } from "react-router-dom";
 import { createAlert, getErrorMessage } from "../alert/alertSlice";
 import { Link } from "react-router-dom";
@@ -22,12 +22,13 @@ export default function ReplyPreview(props: {reply: ReplyData}) {
     const reply = props.reply;
     const isAuthor = useCheckCorrectUserRelax(reply ? reply.author : "");
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const [deleteReply, {isSuccess, isLoading, error}] = useDeleteReplyMutation();
+    const [deleteReply, {isSuccess: deleteSuccess, isLoading: deleteLoading, error: deleteError}] = useDeleteReplyMutation();
+    const [voteReply, {isSuccess: voteSuccess, isLoading: voteLoading, error: voteError}] = useVoteReplyMutation();
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (isSuccess) {
+        if (deleteSuccess) {
             dispatch(createAlert({
                 severity : "success",
                 alert: "Comment deleted successfully."
@@ -35,13 +36,20 @@ export default function ReplyPreview(props: {reply: ReplyData}) {
             navigate(0)
         }
 
-        if (error) {
+        if (deleteError) {
             dispatch(createAlert({
                 severity: "error",
-                alert: getErrorMessage(error)
+                alert: getErrorMessage(deleteError)
             }));
         }
-    }, [isSuccess, error])
+
+        if (voteError) {
+            dispatch(createAlert({
+                severity: "error",
+                alert: getErrorMessage(voteError)
+            }));
+        }
+    }, [deleteSuccess, deleteError, voteError])
 
     const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
@@ -50,6 +58,14 @@ export default function ReplyPreview(props: {reply: ReplyData}) {
     const handleClose = () => {
         setAnchorEl(null);
     };
+
+    function handleVote(vote: "up" | "down") {
+        if (reply.user_vote === vote) {
+            voteReply({id: reply.id, vote: "none"})
+        } else {
+            voteReply({id: reply.id, vote: vote})
+        }
+    }
 
     return (
         <Container 
@@ -106,11 +122,25 @@ export default function ReplyPreview(props: {reply: ReplyData}) {
                 reply.created_at.slice(0,10) + 
                 (reply.updated_at !== reply.created_at ? ` ( Edited ${reply.updated_at.slice(0,10)} )` : "")}
             </Typography>
-            <Box sx={{display: 'flex', alignItems: 'center', gap: 1}}>
-                <ThumbUp sx={{color: "#AAA", fontSize: "0.8em"}}/>
+            <Box sx={{display: 'flex', alignItems: 'center', gap: 1, mt: 1}}>
+                <ThumbUp 
+                    onClick={() => handleVote("up")} 
+                    sx={{
+                        color: reply.user_vote === "up" ? "#1976d2": "#AAA", 
+                        fontSize: "0.8em", 
+                        '&:hover': {color: reply.user_vote === "up" ? "#1976d2": "#666", }
+                    }}
+                />
                 <Typography variant="caption" color="#888">{reply.upvotes}</Typography>
                 <Typography variant="caption" color="#888"> • </Typography>
-                <ThumbDown sx={{color: "#AAA", fontSize: "0.8em"}}/>
+                <ThumbDown 
+                    onClick={() => handleVote("down")} 
+                    sx={{
+                        color: reply.user_vote === "down" ? "#f44336": "#AAA", 
+                        fontSize: "0.8em", 
+                        '&:hover': {color: reply.user_vote === "down" ? "#f44336": "#666", }
+                    }}
+                />
                 <Typography variant="caption" color="#888">{reply.downvotes}</Typography>
             </Box>
         </Container>

@@ -99,7 +99,7 @@ const repliesApi = createApi({
         voteReply: builder.mutation<void, VoteReplyData>({
             query: (voteData) => ({
                 url: `/${voteData.id}/vote`,
-                method: "PUT",
+                method: "POST",
                 body: {
                     vote: {
                         vote: voteData.vote
@@ -112,6 +112,8 @@ const repliesApi = createApi({
 })
 
 export default repliesApi;
+
+export const resetReplies = repliesApi.util.resetApiState;
 
 export const {
     useGetRepliesByCommentQuery,

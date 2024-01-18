@@ -1,4 +1,4 @@
-import { useGetCommentsByPostQuery } from './commentsApi';
+import { CommentData, useGetCommentsByPostQuery } from './commentsApi';
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { createAlert, getErrorMessage } from '../alert/alertSlice';
@@ -15,7 +15,8 @@ import {
 export default function Comments(props: {postId: string}) {
     const [page, setPage] = useState(1);
     const [sortBy, setSortBy] = useState<"time" | "rating">("time");
-    const { data: comments, isLoading, error } = useGetCommentsByPostQuery({
+    const [comments, setComments] = useState<CommentData[]>([]);
+    const { data: commentsPage, isLoading, error } = useGetCommentsByPostQuery({
         page: page,
         sortBy: sortBy,
         postId: props.postId
@@ -30,6 +31,30 @@ export default function Comments(props: {postId: string}) {
             }));
         }
     }, [error])
+
+    useEffect(() => {
+        if (commentsPage) {
+            setComments([...comments, ...commentsPage])
+        }
+    }, [commentsPage])
+
+    useEffect(() => {
+        const handleScroll = () => {
+            const offsetHeight = document.documentElement.offsetHeight;
+            const innerHeight = window.innerHeight;
+            const scrollTop = document.documentElement.scrollTop;
+        
+            const hasReachedBottom = offsetHeight - (innerHeight + scrollTop) <= 10;
+        
+            if (hasReachedBottom) {
+                setPage(page + 1);
+            }
+        };
+      
+        window.addEventListener("scroll", handleScroll);
+      
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
 
     return (
         <Container maxWidth="sm">
