@@ -1,15 +1,17 @@
 import { useEffect } from 'react';
-import { SetCookiesData, setCookies } from './cookiesSlice';
+import { setCookies } from './cookiesSlice';
 import { useDeleteProfileMutation, useGetProfileQuery } from './usersApi';
 import { getErrorMessage } from '../../features/alert/alertSlice';
-import { createAlert, createAlertData } from '../alert/alertSlice';
+import { createAlert } from '../alert/alertSlice';
 import { useAppDispatch } from '../../app/hooks';
 import { Link, useNavigate } from 'react-router-dom';
-import Container from '@mui/material/Container';
-import Box from '@mui/material/Box';
-import Avatar from '@mui/material/Avatar';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
+import {
+    Container,
+    Box,
+    Button,
+    Typography,
+    Avatar
+} from '@mui/material'
 
 export default function Profile() {
     const {data: profile, error: profileError} = useGetProfileQuery();
@@ -19,31 +21,27 @@ export default function Profile() {
 
     useEffect(() => {
         if (profileError) {
-            const alertData: createAlertData = {
+            dispatch(createAlert({
                 severity: "error",
                 alert: getErrorMessage(profileError)
-            }
-            dispatch(createAlert(alertData));
+            }));
         }
 
         if (deleteError) {
-            const alertData: createAlertData = {
+            dispatch(createAlert({
                 severity: "error",
                 alert: getErrorMessage(deleteError)
-            }
-            dispatch(createAlert(alertData));
+            }));
         }
 
         if (deleteSuccess) {
-            const cookiesData : SetCookiesData = {
+            dispatch(setCookies({
                 type: "signOut"
-            }
-            dispatch(setCookies(cookiesData));
-            const alertData: createAlertData = {
+            }));
+            dispatch(createAlert({
                 severity : "success",
                 alert: "Profile deleted successfully."
-            }
-            dispatch(createAlert(alertData));
+            }));
             navigate('/posts');
         }
     }, [profileError, deleteError, deleteSuccess])
@@ -52,7 +50,8 @@ export default function Profile() {
         <Container maxWidth="xs">
             {profile && (<Box
                 sx={{
-                marginTop: 8,
+                mt: 8,
+                mb: 16,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center'

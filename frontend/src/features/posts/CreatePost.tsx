@@ -1,16 +1,17 @@
 import { useEffect, useState } from 'react';
-import { useCreatePostMutation, CreatePostData } from "./postsApi";
-import { useNavigate } from "react-router-dom";
+import { useCreatePostMutation } from "./postsApi";
+import { Link, useNavigate } from "react-router-dom";
 import { getErrorMessage } from '../../features/alert/alertSlice';
-import { createAlert, createAlertData } from '../alert/alertSlice';
+import { createAlert } from '../alert/alertSlice';
 import { useAppDispatch, useCheckSignedIn } from '../../app/hooks';
 import Tag from './Tag'
-import Container from '@mui/material/Container';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import TextField from '@mui/material/TextField';
-
+import {
+    Container,
+    Box,
+    Button,
+    Typography,
+    TextField
+} from '@mui/material';
 
 export default function CreatePost() {
     useCheckSignedIn();
@@ -46,19 +47,17 @@ export default function CreatePost() {
 
     useEffect(() => {
         if (error) {
-            const alertData: createAlertData = {
+            dispatch(createAlert({
                 severity: "error",
                 alert: getErrorMessage(error)
-            }
-            dispatch(createAlert(alertData));
+            }));
         } 
 
         if (post) {
-            const alertData: createAlertData = {
+            dispatch(createAlert({
                 severity : "success",
                 alert: "Post created successfully."
-            }
-            dispatch(createAlert(alertData));
+            }));
             navigate(`/posts/${post.id}`);
         }
     }, [error, post])
@@ -111,11 +110,10 @@ export default function CreatePost() {
                 tag: ""
             })
         } else {
-            const alertData: createAlertData = {
+			dispatch(createAlert({
 				severity: "error",
 				alert: error
-			}
-			dispatch(createAlert(alertData));
+			}));
         }
     }
 
@@ -150,27 +148,25 @@ export default function CreatePost() {
     function handleCreate() {
         const {isValid, error} = validateInput();
         if (isValid) {
-            const post : CreatePostData = {
+            create({
                 title: formData.title,
                 content: formData.content,
                 tags: formData.tags
-            }
-            create(post);
+            });
         } else {
-            const alertData: createAlertData = {
+			dispatch(createAlert({
 				severity: "error",
 				alert: error
-			}
-			dispatch(createAlert(alertData));
+			}));
         }
-        
     }
 
     return (
         <Container maxWidth="sm">
             <Box
                 sx={{
-                marginTop: 8,
+                mt: 4,
+                mb: 16,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -206,7 +202,7 @@ export default function CreatePost() {
                             shrink: true,
                           }}
                         multiline
-                        rows={4}
+                        rows={8}
                         value={formData.content}
                         onChange={handleInput}
                         error={formError.content}
@@ -246,11 +242,20 @@ export default function CreatePost() {
                     <Button
 						fullWidth
 						variant="contained"
-						sx={{ mt: 3, mb: 2 }}
+						sx={{ mt: 3 }}
 						onClick={handleCreate}
 					>
 						Create Post
 					</Button>
+                    <Link to="/posts">
+                        <Button
+                            fullWidth
+                            variant="contained"
+                            sx={{ mt: 3, mb: 2, bgcolor: '#BBB', '&:hover': { bgcolor: '#888'} }}
+                        >
+                            Cancel
+                        </Button>
+                    </Link>
                 </Box>
             </Box>
         </Container>

@@ -1,21 +1,26 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import Cookies from 'js-cookie';
 
-export interface SignUpData {
+interface SignUpData {
     username: string,
     email: string,
     password: string,
     remember: boolean
 }
 
-export interface SignInData {
+interface SignInData {
     username: string,
     password: string,
     remember: boolean
 }
 
+interface EditProfileData {
+    username: string,
+    email: string
+}
+
 export interface AuthData {
-    user_id: string,
+    username: string,
     access_token: string,
     access_expiry: string,
     refresh_token: string,
@@ -26,11 +31,6 @@ export interface ProfileData {
     username: string,
     email: string,
     created_at: string
-}
-
-export interface EditProfileData {
-    username: string,
-    email: string
 }
 
 const API_URL = "http://localhost:3000/"

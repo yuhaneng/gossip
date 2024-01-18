@@ -1,45 +1,45 @@
 import Cookies from 'js-cookie';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-export interface GetPostsByTagsData {
+interface GetPostsByTagsData {
     page: number,
     sortBy: "time" | "rating",
     tags: string[]
 }
 
-export interface GetPostsByUserData {
+interface GetPostsByUserData {
     page: number,
     sortBy: "time" | "rating",
-    userId: string
+    user: string
 }
 
-export interface CreatePostData {
+interface CreatePostData {
     title: string,
     content: string,
     tags: string[]
 }
 
-export interface EditPostData extends CreatePostData {
+interface EditPostData extends CreatePostData {
     id: string
 }
 
-export interface VotePostData {
+interface VotePostData {
     id: string,
     vote: "up" | "down" | "none"
 }
 
-export interface PostData extends EditPostData{
+export interface PostData extends EditPostData {
     author: string,
     upvotes: number,
     downvotes: number,
+    user_vote: "up" | "down" | "none",
     created_at: string,
-    updated_at: string,
-    user_vote: "up" | "down" | "none"
+    updated_at: string
 }
 
 const API_URL = "http://localhost:3000/posts"
 
-export const postsApi = createApi({
+const postsApi = createApi({
     reducerPath: 'posts',
     baseQuery: fetchBaseQuery( {
         baseUrl: API_URL,
@@ -58,7 +58,7 @@ export const postsApi = createApi({
             providesTags: (result = []) => ["Post", ...result.map((post) => ({type: "Post" as const, id: post.id}))]
         }),
         getPostsByUser: builder.query<PostData[], GetPostsByUserData>({
-            query: (getData) => `?user=${getData.userId}&page=${getData.page}&sort=${getData.sortBy}`,
+            query: (getData) => `?user=${getData.user}&page=${getData.page}&sort=${getData.sortBy}`,
             providesTags: (result = []) => ["Post", ...result.map((post) => ({type: "Post" as const, id: post.id}))]
         }),
         getPost: builder.query<PostData, string>({
@@ -79,7 +79,7 @@ export const postsApi = createApi({
             }),
             invalidatesTags: ["Post"]
         }),
-        editPost: builder.mutation<PostData, EditPostData>({
+        editPost: builder.mutation<void, EditPostData>({
             query: (editData) => ({
                 url: `/${editData.id}`,
                 method: 'PUT',

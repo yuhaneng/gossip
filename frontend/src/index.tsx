@@ -14,6 +14,8 @@ import CreatePost from './features/posts/CreatePost';
 import EditPost from './features/posts/EditPost';
 import Post from './features/posts/Post';
 import Posts from './features/posts/Posts';
+import CreateComment from './features/comments/CreateComment';
+import EditComment from './features/comments/EditComment';
 import reportWebVitals from './reportWebVitals';
 import './index.css';
 
@@ -26,28 +28,6 @@ const router = createBrowserRouter([
     element: <App />,
     errorElement: <ErrorPage />,
     children: [
-      { 
-        path: 'posts',
-        element: <Outlet />,
-        children: [
-          {
-            path: '',
-            element: <Posts />
-          },
-          {
-            path: ':id',
-            element: <Post />
-          },
-          {
-            path: 'create',
-            element: <CreatePost />
-          },
-          {
-            path: ':id/edit',
-            element: <EditPost />
-          }
-        ]
-      },
       {
         path: 'users',
         element: <Outlet />,
@@ -71,6 +51,42 @@ const router = createBrowserRouter([
           {
             path: 'signout',
             element: <SignOut />
+          }
+        ]
+      },
+      { 
+        path: 'posts',
+        element: <Outlet />,
+        children: [
+          {
+            path: '',
+            element: <Posts />
+          },
+          {
+            path: ':id',
+            element: <Post />
+          },
+          {
+            path: 'create',
+            element: <CreatePost />
+          },
+          {
+            path: ':id/edit',
+            element: <EditPost />
+          }
+        ]
+      },
+      {
+        path: 'comments',
+        element: <Outlet />,
+        children: [
+          {
+            path: 'create/:postId',
+            element: <CreateComment />
+          },
+          {
+            path: ':id/edit',
+            element: <EditComment />
           }
         ]
       }

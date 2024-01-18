@@ -2,22 +2,27 @@ import { useParams, Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { useGetPostQuery, useDeletePostMutation, useVotePostMutation } from "./postsApi";
 import { getErrorMessage } from '../../features/alert/alertSlice';
-import { createAlert, createAlertData } from '../alert/alertSlice';
+import { createAlert } from '../alert/alertSlice';
 import { useAppDispatch, useAutoSignIn, useCheckCorrectUserRelax } from '../../app/hooks';
 import { useEffect, useState } from 'react';
-import Container from '@mui/material/Container';
-import Box from '@mui/material/Box';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
-import Avatar from '@mui/material/Avatar';
-import IconButton from '@mui/material/IconButton';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import ThumbUpIcon from '@mui/icons-material/ThumbUp';
-import ThumbDownIcon from '@mui/icons-material/ThumbDown';
-import Divider from '@mui/material/Divider';
+import Comments from '../comments/Comments';
+import {
+    Container,
+    Box,
+    Stack,
+    Button,
+    IconButton,
+    Typography,
+    Avatar,
+    Menu,
+    MenuItem,
+    Divider
+} from '@mui/material';
+import {
+    MoreVert,
+    ThumbUp,
+    ThumbDown
+} from '@mui/icons-material';
 
 export default function Post() {
     const { id = "0" } = useParams();
@@ -32,32 +37,28 @@ export default function Post() {
 
     useEffect(() => {
         if (postError) {
-            const alertData: createAlertData = {
+            dispatch(createAlert({
                 severity: "error",
                 alert: getErrorMessage(postError)
-            }
-            dispatch(createAlert(alertData));
+            }));
         } 
         if (deleteError) {
-            const alertData: createAlertData = {
+            dispatch(createAlert({
                 severity: "error",
                 alert: getErrorMessage(deleteError)
-            }
-            dispatch(createAlert(alertData));
+            }));
         }
         if (voteError) {
-            const alertData: createAlertData = {
+            dispatch(createAlert({
                 severity: "error",
                 alert: getErrorMessage(voteError)
-            }
-            dispatch(createAlert(alertData));
+            }));
         }
         if (deleteSuccess) {
-            const alertData: createAlertData = {
+            dispatch(createAlert({
                 severity : "success",
                 alert: "Post deleted successfully."
-            }
-            dispatch(createAlert(alertData));
+            }));
             navigate('/posts')
         }
     }, [postError, deleteError, voteError, deleteSuccess])
@@ -84,7 +85,8 @@ export default function Post() {
         <Container maxWidth="sm" >
             <Box
                 sx={{
-                marginTop: 5,
+                mt: 4,
+                mb: 16,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'left'
@@ -96,7 +98,7 @@ export default function Post() {
                                 <Typography variant="h3" component="h2" sx={{fontSize: '3em', fontWeight: 800, mb: 0.5}}>
                                     {post.title}
                                 </Typography>
-                                {isAuthor && <div>
+                                {isAuthor && <Box>
                                 <IconButton
                                     size="large"
                                     aria-label="options"
@@ -105,7 +107,7 @@ export default function Post() {
                                     onClick={handleMenu}
                                     color="inherit"
                                 >
-                                    <MoreVertIcon sx={{color: "#AAA"}} />
+                                    <MoreVert sx={{color: "#AAA"}} />
                                 </IconButton>
                                 <Menu
                                     sx={{ mt: '45px' }}
@@ -129,7 +131,7 @@ export default function Post() {
 
                                     <MenuItem onClick={() => deletePost(id)}>Delete Post</MenuItem>
                                 </Menu>
-                                </div>}
+                                </Box>}
                             </Box>
                             <Stack direction="row" sx={{mb: 1.5}}>
                                 <Avatar />
@@ -149,7 +151,7 @@ export default function Post() {
                                     {post.tags.map((tag) => `#${tag}   `)}
                             </Typography>
                             <Box sx={{display: 'flex', alignItems: 'center', gap: 1, mt: 1}}>
-                                <ThumbUpIcon 
+                                <ThumbUp 
                                     onClick={() => handleVote("up")} 
                                     sx={{
                                         color: post.user_vote === "up" ? "#1976d2": "#AAA", 
@@ -159,7 +161,7 @@ export default function Post() {
                                 />
                                 <Typography variant="caption" color="#888">{post.upvotes}</Typography>
                                 <Typography variant="caption" color="#888"> • </Typography>
-                                <ThumbDownIcon 
+                                <ThumbDown 
                                     onClick={() => handleVote("down")} 
                                     sx={{
                                         color: post.user_vote === "down" ? "#f44336": "#AAA", 
@@ -175,15 +177,7 @@ export default function Post() {
                                 </Button>
                             </Link>
                         <Divider sx={{mt: 7}}/>
-                        <Box sx={{mt: 5, display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                            <Typography variant="h5" sx={{fontWeight: 800}}>
-                                Comments
-                            </Typography>
-                            <Link to={`/comments/${id}/0/create`}>
-                                <Button variant="outlined" size="small">Create Comment</Button>
-                            </Link>
-                        </Box>
-                        {/* <Comments postId={id} /> */}
+                        <Comments postId={id} />
                     </Box>
                 )}
             </Box>

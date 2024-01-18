@@ -10,7 +10,7 @@ class PostsController < ApplicationController
         # Get posts by username.
         if (params[:user])
           user = User.find_by(username: params[:user])
-          posts = user.posts  
+          posts = user.posts if !user.nil?
   
         # Get posts by tags.
         elsif (params[:tags])
@@ -22,20 +22,24 @@ class PostsController < ApplicationController
         else 
           posts = Post.all
         end
-  
-        # Order posts by rating or time.
-        if (params[:sort] == "rating")
-        #   posts = posts.order("upvotes - downvotes")
+        
+        if posts
+          # Order posts by rating or time.
+          if (params[:sort] == "rating")
+          #   posts = posts.order("upvotes - downvotes")
+          else
+            posts = posts.order("created_at" => :desc)
+          end
+    
+          # Paginate posts.
+          posts = posts
+            .limit(Constants::POSTS_PER_PAGE)
+            .offset(Constants::POSTS_PER_PAGE * (params[:page].to_i - 1))
+    
+          render json: posts.map {|post| create_post_data(post)}
         else
-          posts = posts.order("created_at" => :desc)
+          render json: {error: "Could not get posts."}, status: :unprocessable_entity
         end
-  
-        # Paginate posts.
-        posts = posts
-          .limit(Constants::POSTS_PER_PAGE)
-          .offset(Constants::POSTS_PER_PAGE * (params[:page].to_i - 1))
-  
-        render json: posts.map {|post| create_post_data(post)}
       else
         render json: {error: "Could not get posts."}, status: :unprocessable_entity
       end
@@ -53,16 +57,16 @@ class PostsController < ApplicationController
       if @post.save
         render json: create_post_data(@post), status: :created
       else
-        render json: @post.errors, status: :unprocessable_entity
+        render json: {error: "Post could not be created."}, status: :unprocessable_entity
       end
     end
   
     # PATCH/PUT /posts/:id
     def update
       if @post.update(post_params)
-        render json: create_post_data(@post)
+        head :ok
       else
-        render json: @post.errors, status: :unprocessable_entity
+        render json: {error: "Post could not be edited."}, status: :unprocessable_entity
       end
     end
   
@@ -114,28 +118,30 @@ class PostsController < ApplicationController
       end
   
       def create_post_data(post)
+          # if logged_in?
+          #   vote = current_user.post_votes.find_by(post_id: post.id)
+          #   if !vote.nil? && vote.up?
+          #     user_vote = "up"
+          #   elsif !vote.nil? && !vote.up?
+          #     user_vote = "down"
+          #   else
+          #     user_vote = "none"
+          #   end
+          # else
+          #   user_vote = "none"
+          # end
         post_data = {
             id: post.id,
+            author: !post.user.nil? ? post.user.username : "",
             title: post.title, 
             content: post.content, 
             tags: post.tags,
             # upvotes: post.post_votes.where(up?: true).count,
             # downvotes: post.post_votes.where(up?: false).count,
+            # user_vote: user_vote,
             created_at: post.created_at,
             updated_at: post.updated_at,
         }
-        post_data[:author] = post.user.username if !post.user.nil?
-        # if logged_in?
-        #   vote = current_user.post_votes.find_by(post_id: post.id)
-        #   if !vote.nil? && vote.up?
-        #     post_data[:user_vote] = "up"
-        #   elsif !vote.nil? && !vote.up?
-        #     post_data[:user_vote] = "down"
-        #   end
-        # else
-        #   post_data[:user_vote] = "none"
-        # end
-        post_data
       end
   end
   

@@ -1,17 +1,18 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { useGetPostQuery, useEditPostMutation, EditPostData } from "./postsApi";
+import { Link, useParams } from 'react-router-dom';
+import { useGetPostQuery, useEditPostMutation } from "./postsApi";
 import { useNavigate } from "react-router-dom";
 import { getErrorMessage } from '../../features/alert/alertSlice';
 import { useAppDispatch, useCheckCorrectUserStrict, useCheckSignedIn } from '../../app/hooks';
-import { createAlert, createAlertData } from '../alert/alertSlice';
+import { createAlert } from '../alert/alertSlice';
 import Tag from './Tag'
-import Container from '@mui/material/Container';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import Typography from '@mui/material/Typography';
-import TextField from '@mui/material/TextField';
-
+import {
+    Container,
+    Box,
+    Button,
+    Typography,
+    TextField
+} from '@mui/material';
 
 export default function EditPost() {
     const { id = "0" } = useParams();
@@ -19,7 +20,7 @@ export default function EditPost() {
     useCheckSignedIn();
     useCheckCorrectUserStrict(oldPost ? oldPost.author : "");
 
-    const [edit, {data: newPost, isLoading: editLoading, error: editError}] = useEditPostMutation();
+    const [edit, {isSuccess: editSuccess, isLoading: editLoading, error: editError}] = useEditPostMutation();
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
 
@@ -60,30 +61,27 @@ export default function EditPost() {
         }
 
         if (postError) {
-            const alertData: createAlertData = {
+            dispatch(createAlert({
                 severity: "error",
                 alert: getErrorMessage(postError)
-            }
-            dispatch(createAlert(alertData));
+            }));
         }
 
         if (editError) {
-            const alertData: createAlertData = {
+            dispatch(createAlert({
                 severity: "error",
                 alert: getErrorMessage(editError)
-            }
-            dispatch(createAlert(alertData));
+            }));
         }
 
-        if (newPost) {
-            const alertData: createAlertData = {
+        if (editSuccess) {
+            dispatch(createAlert({
                 severity : "success",
                 alert: "Post edited successfully."
-            }
-            dispatch(createAlert(alertData));
-            navigate(`/posts/${newPost.id}`);
+            }));
+            navigate(`/posts/${id}`);
         }
-    }, [oldPost, postError, editError, newPost])
+    }, [oldPost, postError, editError, editSuccess])
 
     function handleInput(event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
         const {name, value} = event.target;
@@ -133,11 +131,10 @@ export default function EditPost() {
                 tag: ""
             })
         } else {
-            const alertData: createAlertData = {
+			dispatch(createAlert({
 				severity: "error",
 				alert: error
-			}
-			dispatch(createAlert(alertData));
+			}));
         }
     }
 
@@ -172,19 +169,17 @@ export default function EditPost() {
     function handleEdit() {
         const {isValid, error} = validateInput();
         if (isValid) {
-            const editData :  EditPostData = {
+            edit({
                 id: id,
                 title: formData.title,
                 content: formData.content,
                 tags: formData.tags
-            }
-            edit(editData);
+            });
         } else {
-            const alertData: createAlertData = {
+			dispatch(createAlert({
 				severity: "error",
 				alert: error
-			}
-			dispatch(createAlert(alertData));
+			}));
         }
     }
 
@@ -192,7 +187,8 @@ export default function EditPost() {
         <Container maxWidth="sm">
             <Box
                 sx={{
-                marginTop: 8,
+                mt: 4,
+                mb: 16,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -227,7 +223,7 @@ export default function EditPost() {
                             shrink: true,
                           }}
                         multiline
-                        rows={4}
+                        rows={8}
                         value={formData.content}
                         onChange={handleInput}
                     />
@@ -265,11 +261,20 @@ export default function EditPost() {
                     <Button
 						fullWidth
 						variant="contained"
-						sx={{ mt: 3, mb: 2 }}
+						sx={{ mt: 3 }}
 						onClick={handleEdit}
 					>
 						Edit Post
 					</Button>
+                    <Link to={`/posts/${id}`}>
+                        <Button
+                            fullWidth
+                            variant="contained"
+                            sx={{ mt: 3, mb: 2, bgcolor: '#BBB', '&:hover': { bgcolor: '#888'} }}
+                        >
+                            Cancel
+                        </Button>
+                    </Link>
                 </Box>
             </Box>
         </Container>

@@ -8,7 +8,7 @@ interface alertState {
     alert: string
 }
 
-export type createAlertData = Omit<alertState, 'active'>;
+type createAlertData = Omit<alertState, 'active'>;
 
 const initialState: alertState = {
     active: false,
