@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
 import { useGetPostsByTagsQuery, PostData } from "./postsApi";
-import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { createAlert, createAlertData } from "../alert/alertSlice";
+import { useAppDispatch } from "../../app/hooks";
+import { createAlert } from "../alert/alertSlice";
 import { getErrorMessage } from '../../features/alert/alertSlice';
 import Tag from "./Tag";
 import PostPreview from './PostPreview';
-import Container from '@mui/material/Container';
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import SearchIcon from '@mui/icons-material/Search';
-import TextField from '@mui/material/TextField';
-import InputAdornment from '@mui/material/InputAdornment';
+import {
+    Container,
+    Box,
+    Button,
+    TextField,
+    InputAdornment
+} from '@mui/material';
+import { Search } from '@mui/icons-material';
 
 export default function Posts() {
     const [page, setPage] = useState(1);
@@ -26,11 +28,10 @@ export default function Posts() {
 
     useEffect(() => {
         if (error) {
-            const alertData: createAlertData = {
+            dispatch(createAlert({
                 severity: "error",
                 alert: getErrorMessage(error)
-            }
-            dispatch(createAlert(alertData));
+            }));
         }
     }, [error])
 
@@ -47,7 +48,8 @@ export default function Posts() {
         <Container maxWidth="sm">
             <Box
                 sx={{
-                marginTop: 5,
+                mt: 4,
+                mb: 16,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -62,7 +64,7 @@ export default function Posts() {
                     InputProps={{
                         startAdornment: (
                             <InputAdornment position="start">
-                                <SearchIcon />
+                                <Search />
                             </InputAdornment>
                         ),
                         endAdornment: (
@@ -101,7 +103,7 @@ export default function Posts() {
                         By Time
                     </Button>
                 </Box>
-                <Box sx={{mt: 2}}>
+                <Box sx={{mt: 2, width: '100%'}}>
                     {posts ? posts.map((post : PostData) => <PostPreview post={post} />) : "No posts found."}
                 </Box>
             </Box>

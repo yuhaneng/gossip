@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react';
-import { EditProfileData, useEditProfileMutation, useGetProfileQuery } from './usersApi';
+import { useEditProfileMutation, useGetProfileQuery } from './usersApi';
 import { useAppDispatch } from '../../app/hooks';
-import { useNavigate } from 'react-router-dom';
-import { createAlert, createAlertData } from '../alert/alertSlice';
+import { Link, useNavigate } from 'react-router-dom';
+import { createAlert } from '../alert/alertSlice';
 import { getErrorMessage } from '../../features/alert/alertSlice';
-import Avatar from '@mui/material/Avatar';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import Box from '@mui/material/Box';
-import Container from '@mui/material/Container';
+import {
+    Container,
+    Box,
+    Button,
+    TextField,
+    Avatar
+} from '@mui/material'
 
 export default function EditProfile() {
     const {data: profile, error: profileError} = useGetProfileQuery();
@@ -45,27 +47,24 @@ export default function EditProfile() {
         }
 
         if (profileError) {
-            const alertData: createAlertData = {
+            dispatch(createAlert({
                 severity: "error",
                 alert: getErrorMessage(profileError)
-            }
-            dispatch(createAlert(alertData));
+            }));
         }
 
         if (editError) {
-            const alertData: createAlertData = {
+            dispatch(createAlert({
                 severity: "error",
                 alert: getErrorMessage(editError)
-            }
-            dispatch(createAlert(alertData));
+            }));
         }
 
         if (editSuccess) {
-            const alertData: createAlertData = {
+            dispatch(createAlert({
                 severity : "success",
                 alert: "Profile edited successfully."
-            }
-            dispatch(createAlert(alertData));
+            }));
             navigate('/users/profile');
         }
     }, [profile, profileError, editError, editSuccess])
@@ -99,17 +98,15 @@ export default function EditProfile() {
     function handleEdit() {
         const {isValid, error} = validateInput();
         if (isValid) {
-            const editData: EditProfileData = {
+            edit({
                 username: formData.username,
                 email: formData.email
-            }
-            edit(editData);
+            });
         } else {
-            const alertData: createAlertData = {
+			dispatch(createAlert({
 				severity: "error",
 				alert: error
-			}
-			dispatch(createAlert(alertData));
+			}));
         }
     }
 
@@ -135,7 +132,8 @@ export default function EditProfile() {
         <Container maxWidth="sm">
             {profile && (
                 <Box component="form" noValidate sx={{ 
-                    mt: 8, 
+                    mt: 8,
+					mb: 16,
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center'}}
@@ -171,11 +169,22 @@ export default function EditProfile() {
                     />
                     <Button
                         variant="contained"
-                        sx={{ mt: 5, mb: 2, width: '60%'}}
+                        sx={{ mt: 5, width: '60%'}}
                         onClick={handleEdit}
                     >
                         Edit Profile
                     </Button>
+                    <Box sx={{width: '60%'}}>
+                    <Link to="/users/profile">
+                        <Button
+                            fullWidth
+                            variant="contained"
+                            sx={{ mt: 3, mb: 2, bgcolor: '#BBB', '&:hover': { bgcolor: '#888'} }}
+                        >
+                            Cancel
+                        </Button>
+                    </Link>
+                    </Box>
                 </Box>
             )}
         </Container>

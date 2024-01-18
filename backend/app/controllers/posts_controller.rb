@@ -64,7 +64,7 @@ class PostsController < ApplicationController
     # PATCH/PUT /posts/:id
     def update
       if @post.update(post_params)
-        render json: create_post_data(@post)
+        head :ok
       else
         render json: {error: "Post could not be edited."}, status: :unprocessable_entity
       end

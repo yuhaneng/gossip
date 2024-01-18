@@ -54,8 +54,8 @@ class CommentsController < ApplicationController
   # POST /comments
   def create
     @comment = current_user.comments.build(comment_params)
-    @post = Post.find(comment_params[:post_id])
-    @post.comments << @comment
+    @post = Post.find_by(id: comment_params[:post_id])
+    @post.comments << @comment if !@post.nil?
 
     if @comment.save
       render json: create_comment_data(@comment), status: :created
@@ -66,8 +66,8 @@ class CommentsController < ApplicationController
 
   # PATCH/PUT /comments/1
   def update
-    if @comment.update(comment_params)
-      render json: create_comment_data(@comment)
+    if @comment.update(edit_params)
+      head :ok
     else
       render json: {error: "Comment could not be created."}, status: :unprocessable_entity
     end
@@ -79,14 +79,16 @@ class CommentsController < ApplicationController
   end
 
   private
-    # Use callbacks to share common setup or constraints between actions.
     def set_comment
       @comment = Comment.find(params[:id])
     end
 
-    # Only allow a list of trusted parameters through.
     def comment_params
       params.require(:comment).permit(:post_id, :content)
+    end
+
+    def edit_params
+      params.require(:comment).permit(:content)
     end
 
     # Authenticate access token.

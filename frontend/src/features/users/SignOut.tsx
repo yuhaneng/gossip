@@ -1,20 +1,21 @@
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch } from "../../app/hooks";
-import { SetCookiesData, setCookies } from "./cookiesSlice";
-import Box from '@mui/material/Box';
-import Container from '@mui/material/Container';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
+import { setCookies } from "./cookiesSlice";
+import {
+    Container,
+    Box,
+    Button,
+    Typography
+} from '@mui/material'
 
 export default function SignOut() {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
 
     function handleSignOut() {
-        const cookiesData : SetCookiesData = {
+        dispatch(setCookies({
             type: "signOut"
-        }
-        dispatch(setCookies(cookiesData));
+        }));
         navigate('/posts');
     }
 
@@ -22,7 +23,8 @@ export default function SignOut() {
         <Container maxWidth='xs'>
             <Box
                 sx={{
-                marginTop: 8,
+                mt: 8,
+                mb: 16,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',

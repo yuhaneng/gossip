@@ -1,20 +1,22 @@
 import { useNavigate } from "react-router-dom";
-import { useSignUpMutation, SignUpData } from "./usersApi";
+import { useSignUpMutation } from "./usersApi";
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { createAlert, createAlertData, getErrorMessage } from '../alert/alertSlice';
+import { createAlert, getErrorMessage } from '../alert/alertSlice';
 import { useAppDispatch } from '../../app/hooks';
-import { SetCookiesData, setCookies } from './cookiesSlice';
-import Avatar from '@mui/material/Avatar';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
-import Grid from '@mui/material/Grid';
-import Box from '@mui/material/Box';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import Typography from '@mui/material/Typography';
-import Container from '@mui/material/Container';
+import { setCookies } from './cookiesSlice';
+import {
+	Container,
+	Box,
+	Grid,
+	Button,
+	Typography,
+	TextField,
+	FormControlLabel,
+	Checkbox,
+	Avatar
+} from '@mui/material';
+import {LockOutlined} from '@mui/icons-material'
 
 export default function SignUp() {
     const [signUp, {data: authData, isLoading, error, reset}] = useSignUpMutation();
@@ -50,19 +52,18 @@ export default function SignUp() {
 
 	useEffect(() => {
 		if (error) {
-			const alertData: createAlertData = {
+			  dispatch(createAlert({
 				severity: "error",
 				alert: getErrorMessage(error)
-				}
-			  dispatch(createAlert(alertData))
+				}))
 			  reset();
 		  };
 
 		  if (authData) {
-			const cookiesData : SetCookiesData = remember 
+			dispatch(setCookies(remember 
 				? {
 					type: "signInRemember",
-					userId: authData.user_id,
+					username: authData.username,
 					accessToken: authData.access_token,
 					accessExpiry: authData.access_expiry,
 					refreshToken: authData.refresh_token,
@@ -70,16 +71,14 @@ export default function SignUp() {
 				}
 				: {
 					type: "signInForget",
-					userId: authData.user_id,
+					username: authData.username,
 					accessToken: authData.access_token,
 					accessExpiry: authData.access_expiry,
-				}
-			dispatch(setCookies(cookiesData));
-			const alertData: createAlertData = {
+				}));
+            dispatch(createAlert({
                 severity : "success",
                 alert: "Welcome to Gossip. To continue setting up your profile, click here."
-            }
-            dispatch(createAlert(alertData));
+            }));
 			navigate('/posts/');
 		};
 	}, [error, authData])
@@ -137,19 +136,17 @@ export default function SignUp() {
     function handleSignUp() {
 		const {isValid, error} = validateInput();
 		if (isValid) {
-			const user : SignUpData = {
+			signUp({
 				username: formData.username,
 				email: formData.email,
 				password: formData.password,
 				remember: remember
-			}
-			signUp(user);
+			});
 		} else {
-			const alertData: createAlertData = {
+			dispatch(createAlert({
 				severity: "error",
 				alert: error
-			}
-			dispatch(createAlert(alertData));
+			}));
 		}
     }
 
@@ -157,14 +154,15 @@ export default function SignUp() {
       	<Container component="main" maxWidth="xs">
         	<Box
 				sx={{
-					marginTop: 8,
+					mt: 4,
+					mb: 16,
 					display: 'flex',
 					flexDirection: 'column',
 					alignItems: 'center',
 				}}
 			>
 				<Avatar sx={{ m: 1, bgcolor: 'primary.main' }}>
-					<LockOutlinedIcon />
+					<LockOutlined />
 				</Avatar>
 				<Typography component="h1" variant="h5">
 					Sign Up

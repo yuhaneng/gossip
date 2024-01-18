@@ -1,20 +1,21 @@
 import { useNavigate } from "react-router-dom";
-import { useSignInMutation, SignInData } from "./usersApi";
+import { useSignInMutation } from "./usersApi";
 import { useEffect, useState } from 'react';
-import { createAlert, createAlertData, getErrorMessage} from '../alert/alertSlice';
+import { createAlert, getErrorMessage} from '../alert/alertSlice';
 import { useAppDispatch } from '../../app/hooks';
 import { Link } from 'react-router-dom';
-import { SetCookiesData, setCookies } from './cookiesSlice';
-
-import Avatar from '@mui/material/Avatar';
-import Button from '@mui/material/Button';
-import TextField from '@mui/material/TextField';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox';
-import Box from '@mui/material/Box';
-import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import Typography from '@mui/material/Typography';
-import Container from '@mui/material/Container';
+import { setCookies } from './cookiesSlice';
+import {
+    Container,
+    Box,
+    Button,
+    Typography,
+    TextField,
+    FormControlLabel,
+    Checkbox,
+    Avatar
+} from '@mui/material'
+import { LockOutlined } from '@mui/icons-material';
 
 
 export default function SignIn() {
@@ -26,29 +27,27 @@ export default function SignIn() {
     const dispatch = useAppDispatch();
 
     function handleSignIn() {
-        const user : SignInData = {
+        signIn({
             username: username,
             password: password,
-            remember: remember
-        }
-        signIn(user);
+            remember: remember,
+        });
     }
 
     useEffect(() => {
         if (error) {
-            const alertData: createAlertData = {
+            dispatch(createAlert({
                 severity: "error",
                 alert: getErrorMessage(error)
-            }
-            dispatch(createAlert(alertData))
+            }))
             reset();
         }
 
         if (authData) {
-            const cookiesData : SetCookiesData = remember 
+            dispatch(setCookies(remember 
                 ? {
                     type: "signInRemember",
-                    userId: authData.user_id,
+                    username: authData.username,
                     accessToken: authData.access_token,
                     accessExpiry: authData.access_expiry,
                     refreshToken: authData.refresh_token,
@@ -56,11 +55,10 @@ export default function SignIn() {
                 }
                 : {
                     type: "signInForget",
-                    userId: authData.user_id,
+                    username: authData.username,
                     accessToken: authData.access_token,
                     accessExpiry: authData.access_expiry,
-                }
-            dispatch(setCookies(cookiesData));
+                }));
             navigate('/posts/');
         };
     }, [error, authData]);
@@ -69,14 +67,15 @@ export default function SignIn() {
         <Container maxWidth="xs">
             <Box
                 sx={{
-                marginTop: 8,
+                mt: 8,
+                mb: 16,
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 }}
             >
                 <Avatar sx={{ m: 1, bgcolor: 'primary.main' }}>
-                    <LockOutlinedIcon />
+                    <LockOutlined />
                 </Avatar>
                 <Typography component="h1" variant="h5">
                     Sign In

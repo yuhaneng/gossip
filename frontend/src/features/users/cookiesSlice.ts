@@ -2,21 +2,21 @@ import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import Cookies from "js-cookie";
 import { RootState } from "../../app/store";
 
-export interface CookiesState {
+interface CookiesState {
     isSignedIn: boolean,
     canRefresh: boolean
 }
 
-export type SetCookiesData = {
+type SetCookiesData = {
     type: "signOut"
 } | {
     type: "signInForget",
-    userId: string,
+    username: string,
     accessToken: string,
     accessExpiry: string
 } | {
     type: "signInRemember",
-    userId: string,
+    username: string,
     accessToken: string,
     accessExpiry: string
     refreshToken: string,
@@ -33,19 +33,19 @@ export const cookiesSlice = createSlice({
     initialState,
     reducers: {
         checkCookies: (state: CookiesState) => {
-            const userId = Cookies.get("userId");
+            const username = Cookies.get("username");
             const accessToken = Cookies.get("accessToken");
             const accessExpiry = Cookies.get("accessExpiry");
             const refreshToken = Cookies.get("refreshToken");
             const refreshExpiry = Cookies.get("refreshExpiry");
             return {
-                isSignedIn: !!userId && !!accessToken && !!accessExpiry && Number(accessExpiry) > Math.round(Date.now() / 1000),
+                isSignedIn: !!username && !!accessToken && !!accessExpiry && Number(accessExpiry) > Math.round(Date.now() / 1000),
                 canRefresh: !!refreshToken && !!refreshExpiry && Number(refreshExpiry) > Math.round(Date.now() / 1000)
             }
         },
         setCookies: (state: CookiesState, action: PayloadAction<SetCookiesData>) => {
             if (action.payload.type === "signOut") {
-                Cookies.remove("userId");
+                Cookies.remove("username");
                 Cookies.remove("accessToken");
                 Cookies.remove("accessExpiry");
                 Cookies.remove("refreshToken");
@@ -55,7 +55,7 @@ export const cookiesSlice = createSlice({
                     canRefresh: false
                 }
             } else if (action.payload.type === "signInForget") {
-                Cookies.set("userId", action.payload.userId);
+                Cookies.set("username", action.payload.username);
                 Cookies.set("accessToken", action.payload.accessToken);
                 Cookies.set("accessExpiry", action.payload.accessExpiry);
                 Cookies.remove("refreshToken");
@@ -65,7 +65,7 @@ export const cookiesSlice = createSlice({
                     canRefresh: false
                 }
             } else {
-                Cookies.set("userId", action.payload.userId);
+                Cookies.set("username", action.payload.username);
                 Cookies.set("accessToken", action.payload.accessToken);
                 Cookies.set("accessExpiry", action.payload.accessExpiry);
                 Cookies.set("refreshToken", action.payload.refreshToken);

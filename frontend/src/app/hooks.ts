@@ -2,10 +2,10 @@ import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import type { RootState, AppDispatch } from './store';
 import { checkCookies, selectCanRefresh, selectIsSignedIn, setCookies } from '../features/users/cookiesSlice';
 import { useGetProfileQuery, useRefreshSessionMutation } from '../features/users/usersApi';
-import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { createAlert, createAlertData } from '../features/alert/alertSlice';
+import { createAlert } from '../features/alert/alertSlice';
+import Cookies from 'js-cookie';
 
 // Use throughout your app instead of plain `useDispatch` and `useSelector`
 export const useAppDispatch = () => useDispatch<AppDispatch>();
@@ -24,12 +24,13 @@ export function useAutoSignIn() {
             refresh().unwrap()
                 .then((value) => dispatch(setCookies({
                     type: "signInRemember", 
-                    userId: value.user_id,
+                    username: value.username,
                     accessToken: value.access_token,
                     accessExpiry: value.access_expiry,
                     refreshToken: value.refresh_token,
                     refreshExpiry: value.refresh_expiry
                 })))
+                .catch(() => {})
         }
     }, [isSignedIn, canRefresh])
 }
@@ -50,19 +51,18 @@ export function useCheckSignedIn() {
                 refresh().unwrap()
                     .then((value) => dispatch(setCookies({
                         type: "signInRemember", 
-                        userId: value.user_id,
+                        username: value.username,
                         accessToken: value.access_token,
                         accessExpiry: value.access_expiry,
                         refreshToken: value.refresh_token,
                         refreshExpiry: value.refresh_expiry
                     })))
-                    .catch(() => navigate('user/signin'))
+                    .catch(() => navigate('users/signin'))
             } else {
-                const alertData : createAlertData = {
+                dispatch(createAlert({
                     severity : "error",
                     alert : "Not signed in."
-                }
-                dispatch(createAlert(alertData));
+                }));
                 navigate('users/signin')
             }
         }
@@ -71,14 +71,12 @@ export function useCheckSignedIn() {
 
 // Returns whether checkname and username match.
 export function useCheckCorrectUserRelax(checkname: string) {
-    const navigate = useNavigate();
-    const dispatch = useAppDispatch();
     const [match, setMatch] = useState(true);
     const {data: profile} = useGetProfileQuery();
 
     useEffect(() => {
-        const username = profile?.username;
-        if (username && checkname !== "" && username !== checkname) {
+        const username = Cookies.get("username");
+        if (checkname !== "" && username !== checkname) {
             setMatch(false)
         } else {
             setMatch(true)
@@ -92,16 +90,14 @@ export function useCheckCorrectUserRelax(checkname: string) {
 export function useCheckCorrectUserStrict(checkname: string) {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
-    const {data: profile} = useGetProfileQuery();
 
     useEffect(() => {
-        const username = profile?.username;
-        if (username && checkname !== "" && username !== checkname) {
-            const alertData : createAlertData = {
+        const username = Cookies.get("username");
+        if (checkname !== "" && username !== checkname) {
+            dispatch(createAlert({
                 severity : "error",
                 alert : "Not authorized to access this page."
-            }
-            dispatch(createAlert(alertData));
+            }));
             navigate("/posts")
         }
     }, [checkname])
