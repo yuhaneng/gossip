@@ -22,17 +22,14 @@ class CommentsController < ApplicationController
         # Order comments by rating or time.
         if (params[:sort] == "rating")
           comments = comments.sort_by { |comment| 
-            comment.comment_votes.where(vote: true).count - comment.comment_votes.where(vote: false).count
+            comment.comment_votes.where(vote: false).count - comment.comment_votes.where(vote: true).count
           }
         else
           comments = comments.order("created_at" => :desc)
         end
 
         # Paginate commments.
-        comments = comments.slice(
-          Constants::POSTS_PER_PAGE * (params[:page].to_i - 1), 
-          Constants::POSTS_PER_PAGE * params[:page].to_i
-        )
+        comments = comments.slice(0, Constants::POSTS_PER_PAGE * params[:page].to_i)
 
         if comments
           render json: comments.map {|comment| create_comment_data(comment)}
@@ -59,7 +56,7 @@ class CommentsController < ApplicationController
     @post.comments << @comment if !@post.nil?
 
     if @comment.save
-      render json: create_comment_data(@comment), status: :created
+      head :ok
     else
       render json: {error: "Comment could not be created."}, status: :unprocessable_entity
     end
@@ -76,7 +73,11 @@ class CommentsController < ApplicationController
 
   # DELETE /comments/1
   def destroy
-    @comment.destroy!
+    if @comment.destroy
+      head :ok
+    else
+      render json: {error: "Comment could not be deleted."}, status: :unprocessable_entity
+    end
   end
 
   # POST /comments/:id/vote
@@ -114,30 +115,28 @@ class CommentsController < ApplicationController
       params.require(:vote).permit(:vote)
     end
 
-    # Authenticate access token.
-    def authenticate_user
-      render json: {error: "Not logged in."}, status: :unauthorized if !logged_in?
-    end
-
     # Check user is querying their own comment before allowing update or destroy.
     def correct_user
-      @comment = current_user.comments.find_by(id: params[:id])
-      render json: {error: "Not authorized to perform this action."}, status: :unauthorized if @comment.nil?
+      comment = current_user.comments.find_by(id: params[:id])
+      render json: {error: "Not authorized to perform this action."}, status: :unauthorized if comment.nil? && !current_user.admin
     end
 
     def create_comment_data(comment)
-      if logged_in?
+      if logged_in? 
         vote = current_user.comment_votes.find_by(comment_id: comment.id)
-        if !vote.nil? && vote.vote
-          user_vote = "up"
-        elsif !vote.nil? && !vote.vote
-          user_vote = "down"
+        if !vote.nil?
+          if vote.vote
+            user_vote = "up"
+          else 
+            user_vote = "down"
+          end
         else
           user_vote = "none"
         end
-      else
-      user_vote = "none"
+      else 
+        user_vote = "none"
       end
+
       comment_data = {
         id: comment.id,
         author: !comment.user.nil? ? comment.user.username : "",

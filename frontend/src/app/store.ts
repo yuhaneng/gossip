@@ -1,6 +1,6 @@
 import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit';
 import usersApi from '../features/users/usersApi';
-import cookiesReducer from '../features/users/cookiesSlice';
+import usersReducer from '../features/users/usersSlice';
 import alertReducer from '../features/alert/alertSlice';
 import postsApi from '../features/posts/postsApi';
 import commentsApi from '../features/comments/commentsApi';
@@ -11,7 +11,7 @@ export const API_URL = "http://localhost:3000/"
 export const store = configureStore({
   reducer: {
     [usersApi.reducerPath]: usersApi.reducer,
-    cookies: cookiesReducer,
+    profile: usersReducer,
     alert: alertReducer,
     [postsApi.reducerPath]: postsApi.reducer,
     [commentsApi.reducerPath]: commentsApi.reducer,

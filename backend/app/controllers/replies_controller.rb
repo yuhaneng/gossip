@@ -24,8 +24,7 @@ class RepliesController < ApplicationController
 
         # Paginate replies.
         replies = replies
-          .limit(Constants::POSTS_PER_PAGE)
-          .offset(Constants::POSTS_PER_PAGE * (params[:page].to_i - 1))
+          .limit(Constants::POSTS_PER_PAGE * params[:page].to_i)
         
         render json: replies.map {|reply| create_reply_data(reply)}
       else
@@ -48,7 +47,7 @@ class RepliesController < ApplicationController
     @comment.replies << @reply if !@comment.nil?
 
     if @reply.save
-      render json: @reply, status: :created, location: @reply
+      head :ok
     else
       render json: {error: "Reply could not be created."}, status: :unprocessable_entity
     end
@@ -65,7 +64,11 @@ class RepliesController < ApplicationController
 
   # DELETE /replies/1
   def destroy
-    @reply.destroy!
+    if @reply.destroy
+      head :ok
+    else
+      render json: {error: "Reply could not be deleted."}, status: :unprocessable_entity
+    end
   end
 
   # POST /replies/:id/vote
@@ -103,30 +106,28 @@ class RepliesController < ApplicationController
       params.require(:vote).permit(:vote)
     end
 
-     # Authenticate access token.
-     def authenticate_user
-      render json: {error: "Not logged in."}, status: :unauthorized if !logged_in?
-    end
-
     # Check user is querying their own comment before allowing update or destroy.
     def correct_user
-      @reply = current_user.replies.find_by(id: params[:id])
-      render json: {error: "Not authorized to perform this action."}, status: :unauthorized if @reply.nil?
+      reply = current_user.replies.find_by(id: params[:id])
+      render json: {error: "Not authorized to perform this action."}, status: :unauthorized if reply.nil? && !current_user.admin
     end
 
     def create_reply_data(reply)
-      if logged_in?
+      if logged_in? 
         vote = current_user.reply_votes.find_by(reply_id: reply.id)
-        if !vote.nil? && vote.vote
-          user_vote = "up"
-        elsif !vote.nil? && !vote.vote
-          user_vote = "down"
+        if !vote.nil?
+          if vote.vote
+            user_vote = "up"
+          else 
+            user_vote = "down"
+          end
         else
           user_vote = "none"
         end
-      else
-      user_vote = "none"
+      else 
+        user_vote = "none"
       end
+
       reply_data = {
         id: reply.id,
         author: !reply.user.nil? ? reply.user.username : "",

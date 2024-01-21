@@ -1,8 +1,8 @@
 import { useCreateCommentMutation } from './commentsApi';
-import { useAppDispatch, useCheckSignedIn } from '../../app/hooks';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { createAlert, getErrorMessage } from '../alert/alertSlice';
+import { useAppDispatch, useCheckSignedIn, useErrorAlert, useFormHandler, useOnSuccess } from '../../app/hooks';
+import { Link, useParams } from 'react-router-dom';
+import { createAlert } from '../alert/alertSlice';
+import { validateContent } from '../../app/validations';
 import {
     Container,
     Box,
@@ -12,62 +12,33 @@ import {
 } from '@mui/material';
 
 export default function CreateComment() {
-    const {postId = "0"} = useParams();
     useCheckSignedIn();
-    const [create, {isSuccess, isLoading, error}] = useCreateCommentMutation();
-    const navigate = useNavigate();
+    const {postId = "0"} = useParams();
+    const [create, {isSuccess, error}] = useCreateCommentMutation();
     const dispatch = useAppDispatch();
-    const [content, setContent] = useState("")
-    const [contentError, setContentError] = useState(false);
 
-    useEffect(() => {
-        if (error) {
-            dispatch(createAlert({
-                severity: "error",
-                alert: getErrorMessage(error)
-            }));
-        } 
-
-        if (isSuccess) {
-            dispatch(createAlert({
-                severity : "success",
-                alert: "Comment created successfully."
-            }));
-            navigate(`/posts/${postId}`);
-        }
-    }, [error, isSuccess])
-
-    function handleInput(event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
-        setContent(event.target.value);
-        setContentError(false);
+    interface FormData {
+        content: string
     }
+    const {formData, formError, handleInput, handleError} = useFormHandler<FormData>({
+        content: ""
+    })
 
-    function validateInput() {
-        let isValid = false;
-        let error = "";
-        if (content.length === 0) {
-            setContentError(true);
-            error = "Content is required."
-        } else if (content.length > 255) {
-            setContentError(true);
-            error = "Content too long. Maximum 255 characters."
-        } else {
-            isValid = true;
-        }
-        return {isValid, error};
-    }
+    useErrorAlert(error);
+    useOnSuccess(isSuccess, "Comment created successfully.", `/posts/${postId}`);
 
     function handleCreate() {
-        const {isValid, error} = validateInput();
-        if (isValid) {
+        const contentError = validateContent(formData.content);
+        if (!contentError) {
             create({
                 postId: postId,
-                content: content,
+                content: formData.content,
             });
         } else {
+            handleError({content: true});
 			dispatch(createAlert({
 				severity: "error",
-				alert: error
+				alert: contentError
 			}));
         }
     }
@@ -76,7 +47,7 @@ export default function CreateComment() {
         <Container maxWidth="sm">
             <Box
                 sx={{
-                mt: 8,
+                mt: 12,
                 mb: 16,
                 display: 'flex',
                 flexDirection: 'column',
@@ -99,9 +70,9 @@ export default function CreateComment() {
                           }}
                         multiline
                         rows={8}
-                        value={content}
-                        onChange={handleInput}
-                        error={contentError}
+                        value={formData.content}
+                        onChange={(e) => handleInput({content: e.target.value})}
+                        error={formError.content}
                     />
                     <Button
                         fullWidth

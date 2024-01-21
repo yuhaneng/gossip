@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
-import { ReplyData, useGetRepliesByCommentQuery } from './repliesApi';
-import { useAppDispatch } from '../../app/hooks';
-import { createAlert, getErrorMessage } from '../alert/alertSlice';
+import { useState } from 'react';
+import { useGetRepliesByCommentQuery } from './repliesApi';
+import { useErrorAlert } from '../../app/hooks';
 import ReplyPreview from './ReplyPreview';
 import { 
     Container,
@@ -12,32 +11,12 @@ import {
 
 export default function Replies(props: {commentId: string}) {
     const [page, setPage] = useState(1);
-    const [replies, setReplies] = useState<ReplyData[]>([]);
-    const [isLastPage, setIsLastPage] = useState(false);
-    const { data: repliesPage, isLoading, error } = useGetRepliesByCommentQuery({
+    const { data: replies, error } = useGetRepliesByCommentQuery({
         page: page,
         commentId: props.commentId
     });
-    const dispatch = useAppDispatch();
 
-    useEffect(() => {
-        if (error) {
-            dispatch(createAlert({
-                severity: "error",
-                alert: getErrorMessage(error)
-            }));
-        }
-    }, [error])
-
-    useEffect(() => {
-        if (repliesPage) {
-            if (repliesPage.length === 0) {
-                setIsLastPage(true);
-            } else {
-                setReplies([...replies, ...repliesPage])
-            }
-        }
-    }, [repliesPage])
+    useErrorAlert(error);
 
     return (
         <Container maxWidth="sm" sx={{
@@ -58,7 +37,6 @@ export default function Replies(props: {commentId: string}) {
                     <Button 
                         variant="text" 
                         onClick={() => setPage(page + 1)}
-                        disabled={isLastPage}
                         sx={{mt: 1, ml: -3, fontSize: '0.75em'}}
                     >
                         Show More Replies

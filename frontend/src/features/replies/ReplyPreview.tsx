@@ -1,8 +1,7 @@
-import { useEffect, useState } from "react";
-import { useAppDispatch, useCheckCorrectUserRelax } from "../../app/hooks";
+import { useState } from "react";
+import { useAppDispatch, useCheckCorrectUserRelax, useErrorAlert, useOnSuccess } from "../../app/hooks";
 import { ReplyData, useDeleteReplyMutation, useVoteReplyMutation } from "./repliesApi";
 import { useNavigate } from "react-router-dom";
-import { createAlert, getErrorMessage } from "../alert/alertSlice";
 import { Link } from "react-router-dom";
 import { 
     Container,
@@ -22,34 +21,12 @@ export default function ReplyPreview(props: {reply: ReplyData}) {
     const reply = props.reply;
     const isAuthor = useCheckCorrectUserRelax(reply ? reply.author : "");
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const [deleteReply, {isSuccess: deleteSuccess, isLoading: deleteLoading, error: deleteError}] = useDeleteReplyMutation();
-    const [voteReply, {isSuccess: voteSuccess, isLoading: voteLoading, error: voteError}] = useVoteReplyMutation();
-    const dispatch = useAppDispatch();
-    const navigate = useNavigate();
+    const [deleteReply, {isSuccess: deleteSuccess, error: deleteError}] = useDeleteReplyMutation();
+    const [voteReply, {error: voteError}] = useVoteReplyMutation();
 
-    useEffect(() => {
-        if (deleteSuccess) {
-            dispatch(createAlert({
-                severity : "success",
-                alert: "Comment deleted successfully."
-            }));
-            navigate(0)
-        }
-
-        if (deleteError) {
-            dispatch(createAlert({
-                severity: "error",
-                alert: getErrorMessage(deleteError)
-            }));
-        }
-
-        if (voteError) {
-            dispatch(createAlert({
-                severity: "error",
-                alert: getErrorMessage(voteError)
-            }));
-        }
-    }, [deleteSuccess, deleteError, voteError])
+    useErrorAlert(deleteError);
+    useErrorAlert(voteError);
+    useOnSuccess(deleteSuccess, "Comment deleted successfully.", 0);
 
     const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);

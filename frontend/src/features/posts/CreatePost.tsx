@@ -1,10 +1,9 @@
-import { useEffect, useState } from 'react';
 import { useCreatePostMutation } from "./postsApi";
-import { Link, useNavigate } from "react-router-dom";
-import { getErrorMessage } from '../../features/alert/alertSlice';
+import { Link } from "react-router-dom";
 import { createAlert } from '../alert/alertSlice';
-import { useAppDispatch, useCheckSignedIn } from '../../app/hooks';
+import { useAppDispatch, useCheckSignedIn, useErrorAlert, useFormHandler, useOnSuccess } from '../../app/hooks';
 import Tag from './Tag'
+import { validatePostContent, validateTag, validateTitle } from "../../app/validations";
 import {
     Container,
     Box,
@@ -15,9 +14,11 @@ import {
 
 export default function CreatePost() {
     useCheckSignedIn();
-    const [create, {data: post, isLoading, error}] = useCreatePostMutation();
-    const navigate = useNavigate();
     const dispatch = useAppDispatch();
+    const [create, {isSuccess, isLoading, error}] = useCreatePostMutation();
+
+    useErrorAlert(error);
+    useOnSuccess(isSuccess, "Post created successfully.", `/posts`);
 
     interface FormData {
         title: string,
@@ -25,147 +26,58 @@ export default function CreatePost() {
         tag: string,
         tags: string[]
     }
-    const initialFormData: FormData = {
+    const {formData, formError, handleInput, handleError} = useFormHandler<FormData>({
         title: "",
         content: "",
         tag: "",
         tags: []
-    }
-    const [formData, setFormData] = useState(initialFormData);
-
-    interface FormError {
-        title: boolean,
-        content: boolean,
-        tag: boolean
-    }
-    const initialFormError: FormError = {
-        title: false,
-        content: false,
-        tag: false
-    }
-    const [formError, setFormError] = useState(initialFormError);
-
-    useEffect(() => {
-        if (error) {
-            dispatch(createAlert({
-                severity: "error",
-                alert: getErrorMessage(error)
-            }));
-        } 
-
-        if (post) {
-            dispatch(createAlert({
-                severity : "success",
-                alert: "Post created successfully."
-            }));
-            navigate(`/posts/${post.id}`);
-        }
-    }, [error, post])
-
-    function handleInput(event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
-        const {name, value} = event.target;
-        setFormData({
-            ...formData,
-            [name]: value
-        })
-        if ((name === "title" || name === "content" || name === "tag") && formError[name]) {
-            handleError(name, false)
-        }
-    }
-
-    function handleError(name: "title" | "content" | "tag", value: boolean) {
-        setFormError({
-            ...formError,
-            [name]: value
-        })
-    }
-
-    function validateTag() {
-        let isValid = false;
-        let error = "";
-        if (formData.tag.length === 0) {
-            handleError("tag", true);
-            error = "Tag cannot be empty."
-        } else if (!formData.tag.match(/^\w*$/)) {
-            handleError("tag", true);
-            error = "Tag cannot contain special characters."
-        } else if (formData.tag.length > 10) {
-            handleError("tag", true);
-            error = "Tag too long. Maximum 10 characters."
-        } else if (formData.tags.includes(formData.tag)) {
-            handleError("tag", true);
-            error = "Tag must be unique."
-        } else {
-            isValid = true;
-        }
-        return {isValid, error};
-    }
+    });
 
     function handleAddTag(){
-        const {isValid, error} = validateTag();
-        if (isValid) {
-            setFormData({
-                ...formData,
-                tags: formData.tags.concat(formData.tag.toLowerCase()),
-                tag: ""
-            })
+        const tagError = validateTag(formData.tag, formData.tags);
+        if (!tagError) {
+            handleInput({tag: "", tags: formData.tags.concat(formData.tag.toLowerCase())});
         } else {
+            handleError({tag: true});
 			dispatch(createAlert({
 				severity: "error",
-				alert: error
+				alert: tagError
 			}));
         }
     }
 
     function deleteTag(removeTag: string) {
-        setFormData({
-            ...formData,
-            tags: formData.tags.filter((tag) => tag !== removeTag)
-        })
-    }
-
-    function validateInput() {
-        let isValid = false;
-        let error = "";
-        if (formData.title.length === 0) {
-            handleError("title", true);
-            error = "Title is required."
-        } else if (formData.title.length > 255) {
-            handleError("title", true);
-            error = "Title too long. Maximum 255 characters."
-        } else if (formData.content.length === 0) {
-            handleError("content", true);
-            error = "Content is required." 
-        } else if (formData.content.length > 50000) {
-            handleError("content", true);
-            error = "Content too long. Maximum 50 000 characters."
-        } else {
-            isValid = true;
-        }
-        return {isValid, error};
+        handleInput({tags:formData.tags.filter((tag) => tag !== removeTag)})
     }
 
     function handleCreate() {
-        const {isValid, error} = validateInput();
-        if (isValid) {
+        const titleError = validateTitle(formData.title);
+        const contentError = validatePostContent(formData.content);
+        if (titleError) {
+            dispatch(createAlert({
+				severity: "error",
+				alert: titleError
+			}));
+        } else if (contentError) {
+            dispatch(createAlert({
+				severity: "error",
+				alert: contentError
+			}));
+        } else {
             create({
                 title: formData.title,
                 content: formData.content,
                 tags: formData.tags
             });
-        } else {
-			dispatch(createAlert({
-				severity: "error",
-				alert: error
-			}));
         }
+        handleError({title: !!titleError, content: !!contentError});
     }
 
     return (
         <Container maxWidth="sm">
             <Box
                 sx={{
-                mt: 4,
+                mt: 12,
                 mb: 16,
                 display: 'flex',
                 flexDirection: 'column',
@@ -188,7 +100,7 @@ export default function CreatePost() {
                           }}
                         autoFocus
                         value={formData.title}
-                        onChange={handleInput}
+                        onChange={(e) => handleInput({title: e.target.value})}
                         error={formError.title}
                     />
                     <TextField
@@ -204,7 +116,7 @@ export default function CreatePost() {
                         multiline
                         rows={8}
                         value={formData.content}
-                        onChange={handleInput}
+                        onChange={(e) => handleInput({content: e.target.value})}
                         error={formError.content}
                     />
                     <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2}}>
@@ -216,9 +128,9 @@ export default function CreatePost() {
                             InputLabelProps={{
                                 shrink: true,
                             }}
-                            inputProps={{ maxLength: 12 }}
+                            inputProps={{ maxLength: 10 }}
                             value={formData.tag}
-                            onChange={handleInput}
+                            onChange={(e) => handleInput({tag: e.target.value})}
                             error={formError.tag}
                             sx={{flexGrow: 1}}
                         />

@@ -1,10 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import { useSignInMutation } from "./usersApi";
-import { useEffect, useState } from 'react';
-import { createAlert, getErrorMessage} from '../alert/alertSlice';
-import { useAppDispatch } from '../../app/hooks';
+import { useEffect } from 'react';
+import { useAppDispatch, useErrorAlert, useFormHandler } from '../../app/hooks';
 import { Link } from 'react-router-dom';
-import { setCookies } from './cookiesSlice';
+import { updateUser } from './usersSlice';
 import {
     Container,
     Box,
@@ -19,35 +18,40 @@ import { LockOutlined } from '@mui/icons-material';
 
 
 export default function SignIn() {
-    const [signIn, {data: authData, isLoading, error, reset}] = useSignInMutation();
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
-    const [remember, setRemember] = useState(false);
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
+    const [signIn, {data: authData, error}] = useSignInMutation();
 
-    function handleSignIn() {
-        signIn({
-            username: username,
-            password: password,
-            remember: remember,
-        });
+    interface FormData {
+        username: string,
+        password: string,
+        remember: boolean
     }
+    const {formData, formError, handleInput, handleError} = useFormHandler<FormData>({
+        username: "",
+        password: "",
+        remember: false
+    })
+
+    useErrorAlert(error);
 
     useEffect(() => {
         if (error) {
-            dispatch(createAlert({
-                severity: "error",
-                alert: getErrorMessage(error)
-            }))
-            reset();
+            handleError({username: true, password: true})
         }
+    }, [error])
 
+    function handleSignIn() {
+        signIn(formData);
+    }
+
+    useEffect(() => {
         if (authData) {
-            dispatch(setCookies(remember 
+            dispatch(updateUser(formData.remember 
                 ? {
                     type: "signInRemember",
                     username: authData.username,
+                    admin: authData.admin,
                     accessToken: authData.access_token,
                     accessExpiry: authData.access_expiry,
                     refreshToken: authData.refresh_token,
@@ -56,18 +60,19 @@ export default function SignIn() {
                 : {
                     type: "signInForget",
                     username: authData.username,
+                    admin: authData.admin,
                     accessToken: authData.access_token,
                     accessExpiry: authData.access_expiry,
                 }));
             navigate('/posts/');
         };
-    }, [error, authData]);
+    }, [authData]);
 
     return (
         <Container maxWidth="xs">
             <Box
                 sx={{
-                mt: 8,
+                mt: 12,
                 mb: 16,
                 display: 'flex',
                 flexDirection: 'column',
@@ -90,8 +95,9 @@ export default function SignIn() {
                         name="username"
                         autoComplete="username"
                         autoFocus
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
+                        value={formData.username}
+                        onChange={(e) => handleInput({username: e.target.value})}
+                        error={formError.username}
                     />
                     <TextField
                         margin="normal"
@@ -102,15 +108,16 @@ export default function SignIn() {
                         type="password"
                         id="password"
                         autoComplete="current-password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        value={formData.password}
+                        onChange={(e) => handleInput({password: e.target.value})}
+                        error={formError.password}
                     />
                     <FormControlLabel
                         control={<Checkbox 
                             value="remember" 
                             color="primary" 
-                            checked={remember} 
-                            onClick={() => setRemember(!remember)}
+                            checked={formData.remember} 
+                            onClick={(e) => handleInput({remember: !formData.remember})}
                         />}
                         label="Remember me"
                     />

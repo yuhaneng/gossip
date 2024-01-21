@@ -27,20 +27,17 @@ class PostsController < ApplicationController
           # Order posts by rating or time.
           if (params[:sort] == "rating")
             posts = posts.sort_by { |post| 
-              post.post_votes.where(vote: true).count - post.post_votes.where(vote: false).count
+              post.post_votes.where(vote: false).count - post.post_votes.where(vote: true).count
             }
           else
             posts = posts.order(created_at: :desc)
           end
     
           # Paginate posts.
-          posts = posts.slice(
-            Constants::POSTS_PER_PAGE * (params[:page].to_i - 1), 
-            Constants::POSTS_PER_PAGE * params[:page].to_i
-          )
+          posts = posts.slice(0, Constants::POSTS_PER_PAGE * params[:page].to_i)
           
           if posts
-            render json: posts.map {|post| create_post_data(post)}
+            render json: posts.map {|post| create_post_data(post, false)}
           else
             render json: []
           end
@@ -54,7 +51,7 @@ class PostsController < ApplicationController
   
     # GET /posts/:id
     def show
-      render json: create_post_data(@post)
+      render json: create_post_data(@post, true)
     end
   
     # POST /posts
@@ -62,7 +59,7 @@ class PostsController < ApplicationController
       @post = current_user.posts.build(post_params)
   
       if @post.save
-        render json: create_post_data(@post), status: :created
+        head :ok
       else
         render json: {error: "Post could not be created."}, status: :unprocessable_entity
       end
@@ -79,7 +76,11 @@ class PostsController < ApplicationController
   
     # DELETE /posts/:id
     def destroy
-      @post.destroy!
+      if @post.destroy
+        head :ok
+      else
+        render json: {error: "Post could not be deleted."}, status: :unprocessable_entity
+      end
     end
   
     # POST /posts/:id/vote
@@ -114,30 +115,28 @@ class PostsController < ApplicationController
         params.require(:vote).permit(:vote)
       end
   
-      # Authenticate access token.
-      def authenticate_user
-        render json: {error: "Not logged in."}, status: :unauthorized if !logged_in?
-      end
-  
       # Check user is querying their own post before allowing update or destroy.
       def correct_user
-        @post = current_user.posts.find_by(id: params[:id])
-        render json: {error: "Not authorized to perform this action."}, status: :unauthorized if @post.nil?
+        post = current_user.posts.find_by(id: params[:id])
+        render json: {error: "Not authorized to perform this action."}, status: :unauthorized if post.nil? && !current_user.admin
       end
   
-      def create_post_data(post)
-          if logged_in?
-            vote = current_user.post_votes.find_by(post_id: post.id)
-            if !vote.nil? && vote.vote
+      def create_post_data(post, show_vote)
+        if show_vote && logged_in? 
+          vote = current_user.post_votes.find_by(post_id: post.id)
+          if !vote.nil?
+            if vote.vote
               user_vote = "up"
-            elsif !vote.nil? && !vote.vote
+            else 
               user_vote = "down"
-            else
-              user_vote = "none"
             end
           else
             user_vote = "none"
           end
+        else 
+          user_vote = "none"
+        end
+
         post_data = {
             id: post.id,
             author: !post.user.nil? ? post.user.username : "",

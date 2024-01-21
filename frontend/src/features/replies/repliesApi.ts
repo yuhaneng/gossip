@@ -50,21 +50,25 @@ const repliesApi = createApi({
             return headers
         }
      }),
-    tagTypes: ["Reply", "CommentReplies", "UserReplies"],
+    tagTypes: ["Reply"],
     endpoints: (builder) => ({
         getRepliesByComment: builder.query<ReplyData[], GetRepliesByCommentData>({
             query: (getData) => `?comment_id=${getData.commentId}&page=${getData.page}`,
-            providesTags: (result = [], error, arg) => [{type: "CommentReplies", id: arg.commentId}, ...result.map((reply) => ({type: "Reply" as const, id: reply.id}))]
+            providesTags: (result = [], error, arg) => ["Reply",
+                ...result.map((reply) => ({type: "Reply" as const, id: reply.id}))
+            ]
         }),
         getRepliesByUser: builder.query<ReplyData[], GetRepliesByUserData>({
             query: (getData) => `?user=${getData.user}&page=${getData.page}`,
-            providesTags: (result = []) => ["UserReplies", ...result.map((reply) => ({type: "Reply" as const, id: reply.id}))]
+            providesTags: (result = []) => ["Reply",
+                ...result.map((reply) => ({type: "Reply" as const, id: reply.id}))
+            ]
         }),
         getReply: builder.query<ReplyData, string>({
             query: (id) => `/${id}`,
             providesTags: (result, error, arg) => [{type: "Reply", id: arg}]
         }),
-        createReply: builder.mutation<ReplyData, CreateReplyData>({
+        createReply: builder.mutation<void, CreateReplyData>({
             query: (createData) => ({
                 url: '/',
                 method: 'POST',
@@ -75,7 +79,7 @@ const repliesApi = createApi({
                     }
                 }
             }),
-            invalidatesTags: (result, error, arg) => [{type: "CommentReplies", id: arg.commentId}, "UserReplies"]
+            invalidatesTags: ["Reply"]
         }),
         editReply: builder.mutation<void, EditReplyData>({
             query: (editData) => ({

@@ -13,7 +13,7 @@ class ApplicationController < ActionController::API
         else
             validity = 0
         end
-        JWT.encode({sub: user.id, exp: Time.now.to_i + validity}, jwt_key, "HS256")
+        JWT.encode({sub: user.id, exp: Time.now.to_i + validity, admin: user.admin}, jwt_key, "HS256")
     end
  
     # Decode token and check expiry.
@@ -45,4 +45,9 @@ class ApplicationController < ActionController::API
     def logged_in?
         !!current_user
     end
+
+    # Authenticate access token.
+    def authenticate_user
+        render json: {error: "Not logged in."}, status: :unauthorized if !logged_in?
+      end
 end

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAppSelector } from '../../app/hooks';
-import { selectIsSignedIn } from '../users/cookiesSlice';
+import { selectIsSignedIn } from '../users/usersSlice';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';

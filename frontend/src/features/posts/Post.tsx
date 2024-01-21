@@ -1,10 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
 import { useGetPostQuery, useDeletePostMutation, useVotePostMutation } from "./postsApi";
-import { getErrorMessage } from '../../features/alert/alertSlice';
-import { createAlert } from '../alert/alertSlice';
-import { useAppDispatch, useAutoSignIn, useCheckCorrectUserRelax } from '../../app/hooks';
-import { useEffect, useState } from 'react';
+import { useAutoSignIn, useCheckCorrectUserRelax, useErrorAlert, useOnSuccess } from '../../app/hooks';
+import { useState } from 'react';
 import Comments from '../comments/Comments';
 import {
     Container,
@@ -25,43 +22,19 @@ import {
 } from '@mui/icons-material';
 
 export default function Post() {
-    const { id = "0" } = useParams();
-    const { data: post, isLoading: postLoading, error: postError } = useGetPostQuery(id)
-    const [deletePost, {isSuccess: deleteSuccess, isLoading: deleteLoading, error: deleteError}] = useDeletePostMutation();
-    const [votePost, {isSuccess: voteSuccess, isLoading: voteLoading, error: voteError}] = useVotePostMutation();
     useAutoSignIn();
+    
+    const { id = "0" } = useParams();
+    const { data: post, error: postError } = useGetPostQuery(id)
+    const [deletePost, {isSuccess: deleteSuccess, error: deleteError}] = useDeletePostMutation();
+    const [votePost, { error: voteError}] = useVotePostMutation();
     const isAuthor = useCheckCorrectUserRelax(post ? post.author : "");
-    const navigate = useNavigate();
-    const dispatch = useAppDispatch();
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
-    useEffect(() => {
-        if (postError) {
-            dispatch(createAlert({
-                severity: "error",
-                alert: getErrorMessage(postError)
-            }));
-        } 
-        if (deleteError) {
-            dispatch(createAlert({
-                severity: "error",
-                alert: getErrorMessage(deleteError)
-            }));
-        }
-        if (voteError) {
-            dispatch(createAlert({
-                severity: "error",
-                alert: getErrorMessage(voteError)
-            }));
-        }
-        if (deleteSuccess) {
-            dispatch(createAlert({
-                severity : "success",
-                alert: "Post deleted successfully."
-            }));
-            navigate('/posts')
-        }
-    }, [postError, deleteError, voteError, deleteSuccess])
+    useErrorAlert(postError);
+    useErrorAlert(deleteError);
+    useErrorAlert(voteError);
+    useOnSuccess(deleteSuccess, "Post deleted successfully.", "/posts")
 
     const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
@@ -85,7 +58,7 @@ export default function Post() {
         <Container maxWidth="sm" >
             <Box
                 sx={{
-                mt: 4,
+                mt: 12,
                 mb: 16,
                 display: 'flex',
                 flexDirection: 'column',

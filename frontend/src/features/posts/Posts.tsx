@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
-import { useGetPostsByTagsQuery, PostData } from "./postsApi";
-import { useAppDispatch } from "../../app/hooks";
-import { createAlert } from "../alert/alertSlice";
-import { getErrorMessage } from '../../features/alert/alertSlice';
+import { useGetPostsByTagsQuery } from "./postsApi";
+import { useErrorAlert, useScroll } from "../../app/hooks";
 import Tag from "./Tag";
 import PostPreview from './PostPreview';
 import {
@@ -18,63 +16,43 @@ export default function Posts() {
     const [page, setPage] = useState(1);
     const [sortBy, setSortBy] = useState<"time" | "rating">("time");
     const [tags, setTags] = useState<string[]>([]);
-    const {data: postsPage, isLoading, error } = useGetPostsByTagsQuery({
+    const {data: posts, error } = useGetPostsByTagsQuery({
         page: page,
         sortBy: sortBy,
         tags: tags
     });
-    const [posts, setPosts] = useState<PostData[]>([])
+    const atBottom = useScroll();
     const [searchbar, setSearchbar] = useState("");
-    const dispatch = useAppDispatch();
-    const [test, setTest] = useState(false);
+
+    useErrorAlert(error);
 
     useEffect(() => {
-        if (error) {
-            dispatch(createAlert({
-                severity: "error",
-                alert: getErrorMessage(error)
-            }));
+        if (atBottom) {
+            setPage(page + 1);
         }
-    }, [error])
-
-    useEffect(() => {
-        if (postsPage) {
-            setPosts([...posts, ...postsPage])
-        }
-    }, [postsPage])
-
-    useEffect(() => {
-        const handleScroll = () => {
-            const offsetHeight = document.documentElement.offsetHeight;
-            const innerHeight = window.innerHeight;
-            const scrollTop = document.documentElement.scrollTop;
-        
-            const hasReachedBottom = offsetHeight - (innerHeight + scrollTop) <= 10;
-        
-            if (hasReachedBottom) {
-                setPage(page + 1);
-            }
-        };
-      
-        window.addEventListener("scroll", handleScroll);
-      
-        return () => window.removeEventListener("scroll", handleScroll);
-    }, []);
+    }, [atBottom])
 
     function handleAddTag() {
         setTags(tags.concat(searchbar));
         setSearchbar("");
+        setPage(1);
     }
 
     function handleDeleteTag(removeTag: string) {
         setTags(tags.filter((tag) => tag !== removeTag));
+        setPage(1);
+    }
+
+    function handleSort(sort: "time" | "rating") {
+        setSortBy(sort);
+        setPage(1);
     }
 
     return (
         <Container maxWidth="sm">
             <Box
                 sx={{
-                mt: 4,
+                mt: 12,
                 mb: 16,
                 display: 'flex',
                 flexDirection: 'column',
@@ -95,7 +73,7 @@ export default function Posts() {
                         ),
                         endAdornment: (
                             <InputAdornment position="end">
-                                <Button variant="text" onClick={handleAddTag}>
+                                <Button variant="text" onClick={handleAddTag} disabled={searchbar.length === 0}>
                                     Add Tag
                                 </Button>
                             </InputAdornment>
@@ -113,24 +91,24 @@ export default function Posts() {
                     <Button 
                         variant="text" 
                         size="small"  
-                        onClick={() => setSortBy("rating")}
+                        onClick={() => handleSort("rating")}
                         disableRipple
-                        sx={{mr: 2}}
+                        sx={{mr: 2, color: sortBy === "rating" ? '#1976d2' : '#BBB'}}
                     >
                         By Rating
                     </Button>
                     <Button 
                         variant="text" 
                         size="small"  
-                        onClick={() => setSortBy("time")}
+                        onClick={() => handleSort("time")}
                         disableRipple
-                        sx={{ml: 2}}
+                        sx={{ml: 2, color: sortBy === "time" ? '#1976d2' : '#BBB'}}
                     >
                         By Time
                     </Button>
                 </Box>
                 <Box sx={{mt: 2, width: '100%'}}>
-                    {posts ? posts.map((post : PostData) => <PostPreview post={post} />) : "No posts found."}
+                    {posts ? posts.map((post) => <PostPreview post={post} />) : "" }
                 </Box>
             </Box>
         </Container>

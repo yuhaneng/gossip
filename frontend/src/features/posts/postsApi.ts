@@ -55,7 +55,9 @@ const postsApi = createApi({
     endpoints: (builder) => ({
         getPostsByTags: builder.query<PostData[], GetPostsByTagsData>({
             query: (getData) => `?tags=${JSON.stringify(getData.tags)}&page=${getData.page}&sort=${getData.sortBy}`,
-            providesTags: (result = []) => ["Post", ...result.map((post) => ({type: "Post" as const, id: post.id}))]
+            providesTags: (result) => result 
+                ? [ "Post", ...result.map((post) => ({type: "Post" as const, id: post.id})) ]
+                : [ "Post" ]
         }),
         getPostsByUser: builder.query<PostData[], GetPostsByUserData>({
             query: (getData) => `?user=${getData.user}&page=${getData.page}&sort=${getData.sortBy}`,
@@ -65,7 +67,7 @@ const postsApi = createApi({
             query: (id) => `/${id}`,
             providesTags: (result, error, arg) => [{type: "Post", id: arg}]
         }),
-        createPost: builder.mutation<PostData, CreatePostData>({
+        createPost: builder.mutation<void, CreatePostData>({
             query: (createData) => ({
                 url: '/',
                 method: 'POST',

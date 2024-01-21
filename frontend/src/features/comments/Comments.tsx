@@ -1,60 +1,37 @@
-import { CommentData, useGetCommentsByPostQuery } from './commentsApi';
+import { useGetCommentsByPostQuery } from './commentsApi';
 import { Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { createAlert, getErrorMessage } from '../alert/alertSlice';
-import { useAppDispatch } from '../../app/hooks';
+import { useErrorAlert, useScroll } from '../../app/hooks';
 import CommentPreview from './CommentPreview';
 import { 
     Container,
     Box,
     Typography,
-    Button,
-    Divider
+    Button
  } from '@mui/material';
 
 export default function Comments(props: {postId: string}) {
     const [page, setPage] = useState(1);
     const [sortBy, setSortBy] = useState<"time" | "rating">("time");
-    const [comments, setComments] = useState<CommentData[]>([]);
-    const { data: commentsPage, isLoading, error } = useGetCommentsByPostQuery({
+    const atBottom = useScroll();
+    const { data: comments, error } = useGetCommentsByPostQuery({
         page: page,
         sortBy: sortBy,
         postId: props.postId
     });
-    const dispatch = useAppDispatch();
+
+    useErrorAlert(error);
 
     useEffect(() => {
-        if (error) {
-            dispatch(createAlert({
-                severity: "error",
-                alert: getErrorMessage(error)
-            }));
+        if (atBottom) {
+            setPage(page + 1);
         }
-    }, [error])
+    }, [atBottom])
 
-    useEffect(() => {
-        if (commentsPage) {
-            setComments([...comments, ...commentsPage])
-        }
-    }, [commentsPage])
-
-    useEffect(() => {
-        const handleScroll = () => {
-            const offsetHeight = document.documentElement.offsetHeight;
-            const innerHeight = window.innerHeight;
-            const scrollTop = document.documentElement.scrollTop;
-        
-            const hasReachedBottom = offsetHeight - (innerHeight + scrollTop) <= 10;
-        
-            if (hasReachedBottom) {
-                setPage(page + 1);
-            }
-        };
-      
-        window.addEventListener("scroll", handleScroll);
-      
-        return () => window.removeEventListener("scroll", handleScroll);
-    }, []);
+    function handleSort(sort: "time" | "rating") {
+        setSortBy(sort);
+        setPage(1);
+    }
 
     return (
         <Container maxWidth="sm">
@@ -83,18 +60,18 @@ export default function Comments(props: {postId: string}) {
                     <Button 
                         variant="text" 
                         size="small"  
-                        onClick={() => setSortBy("rating")}
+                        onClick={() => handleSort("rating")}
                         disableRipple
-                        sx={{mr: 2}}
+                        sx={{mr: 2, color: sortBy === "rating" ? '#1976d2' : '#BBB'}}
                     >
                         By Rating
                     </Button>
                     <Button 
                         variant="text" 
                         size="small"  
-                        onClick={() => setSortBy("time")}
+                        onClick={() => handleSort("time")}
                         disableRipple
-                        sx={{ml: 2}}
+                        sx={{ml: 2, color: sortBy === "time" ? '#1976d2' : '#BBB'}}
                     >
                         By Time
                     </Button>

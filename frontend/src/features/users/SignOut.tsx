@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch } from "../../app/hooks";
-import { setCookies } from "./cookiesSlice";
+import { updateUser } from "./usersSlice";
 import { resetUsers } from "./usersApi";
 import { resetPosts } from "../posts/postsApi";
 import { resetComments } from "../comments/commentsApi";
@@ -21,7 +21,7 @@ export default function SignOut() {
         dispatch(resetPosts());
         dispatch(resetComments());
         dispatch(resetReplies());
-        dispatch(setCookies({
+        dispatch(updateUser({
             type: "signOut"
         }));
         navigate('/posts');
@@ -31,7 +31,7 @@ export default function SignOut() {
         <Container maxWidth='xs'>
             <Box
                 sx={{
-                mt: 8,
+                mt: 16,
                 mb: 16,
                 display: 'flex',
                 flexDirection: 'column',

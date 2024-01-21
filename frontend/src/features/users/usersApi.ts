@@ -21,6 +21,7 @@ interface EditProfileData {
 
 export interface AuthData {
     username: string,
+    admin: boolean,
     access_token: string,
     access_expiry: string,
     refresh_token: string,

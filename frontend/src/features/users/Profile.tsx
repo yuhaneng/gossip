@@ -1,10 +1,6 @@
-import { useEffect } from 'react';
-import { setCookies } from './cookiesSlice';
 import { useDeleteProfileMutation, useGetProfileQuery } from './usersApi';
-import { getErrorMessage } from '../../features/alert/alertSlice';
-import { createAlert } from '../alert/alertSlice';
-import { useAppDispatch } from '../../app/hooks';
-import { Link, useNavigate } from 'react-router-dom';
+import { useErrorAlert, useOnSuccess } from '../../app/hooks';
+import { Link } from 'react-router-dom';
 import {
     Container,
     Box,
@@ -16,41 +12,16 @@ import {
 export default function Profile() {
     const {data: profile, error: profileError} = useGetProfileQuery();
     const [deleteProfile, {isSuccess: deleteSuccess, error: deleteError}] = useDeleteProfileMutation();
-    const dispatch = useAppDispatch();
-    const navigate = useNavigate();
 
-    useEffect(() => {
-        if (profileError) {
-            dispatch(createAlert({
-                severity: "error",
-                alert: getErrorMessage(profileError)
-            }));
-        }
-
-        if (deleteError) {
-            dispatch(createAlert({
-                severity: "error",
-                alert: getErrorMessage(deleteError)
-            }));
-        }
-
-        if (deleteSuccess) {
-            dispatch(setCookies({
-                type: "signOut"
-            }));
-            dispatch(createAlert({
-                severity : "success",
-                alert: "Profile deleted successfully."
-            }));
-            navigate('/posts');
-        }
-    }, [profileError, deleteError, deleteSuccess])
+    useErrorAlert(profileError);
+    useErrorAlert(deleteError);
+    useOnSuccess(deleteSuccess, "Profile delete successfully.", '/posts');
 
     return (
         <Container maxWidth="xs">
             {profile && (<Box
                 sx={{
-                mt: 8,
+                mt: 12,
                 mb: 16,
                 display: 'flex',
                 flexDirection: 'column',

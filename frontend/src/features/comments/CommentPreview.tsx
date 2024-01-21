@@ -1,8 +1,7 @@
 import { CommentData, useDeleteCommentMutation, useVoteCommentMutation } from "./commentsApi";
-import { useAppDispatch, useCheckCorrectUserRelax } from "../../app/hooks";
-import { useEffect, useState } from "react";
+import { useCheckCorrectUserRelax, useErrorAlert, useOnSuccess } from "../../app/hooks";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { createAlert, getErrorMessage } from "../alert/alertSlice";
 import Replies from "../replies/Replies";
 import { 
     Container,
@@ -11,8 +10,7 @@ import {
     IconButton,
     Menu,
     MenuItem,
-    Button,
-    Divider
+    Button
  } from '@mui/material';
  import {
     ThumbUp,
@@ -25,37 +23,19 @@ export default function CommentPreview(props: {comment: CommentData}) {
     const isAuthor = useCheckCorrectUserRelax(comment ? comment.author : "");
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const [showReplies, setShowReplies] = useState(false);
-    const [deleteComment, {isSuccess: deleteSuccess, isLoading: deleteLoading, error: deleteError}] = useDeleteCommentMutation();
-    const [voteComment, {isSuccess: voteSuccess, isLoading: voteLoading, error: voteError}] = useVoteCommentMutation();
-    const dispatch = useAppDispatch();
-    const navigate = useNavigate();
+    const [deleteComment, {isSuccess: deleteSuccess, error: deleteError}] = useDeleteCommentMutation();
+    const [voteComment, {error: voteError}] = useVoteCommentMutation();
 
-    useEffect(() => {
-        if (deleteSuccess) {
-            dispatch(createAlert({
-                severity : "success",
-                alert: "Comment deleted successfully."
-            }));
-            navigate(0)
-        }
-
-        if (deleteError) {
-            dispatch(createAlert({
-                severity: "error",
-                alert: getErrorMessage(deleteError)
-            }));
-        }
-
-        if (voteError) {
-            dispatch(createAlert({
-                severity: "error",
-                alert: getErrorMessage(voteError)
-            }));
-        }
-    }, [deleteSuccess, deleteError, voteError])
+    useErrorAlert(deleteError);
+    useErrorAlert(voteError);
+    useOnSuccess(deleteSuccess, "Comment deleted successfully.", "")
 
     const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
-        setAnchorEl(event.currentTarget);
+        if (anchorEl === null) {
+            setAnchorEl(event.currentTarget);
+        } else {
+            setAnchorEl(null);
+        }
     };
 
     const handleClose = () => {
@@ -111,6 +91,7 @@ export default function CommentPreview(props: {comment: CommentData}) {
                         horizontal: 'right',
                         }}
                         open={Boolean(anchorEl)}
+                        onClick={handleMenu}
                         onClose={handleClose}
                     >
                         <Link to={`/replies/create/${comment.post_id}/${comment.id}`} style={{textDecoration: 'none', color: 'inherit'}}>
@@ -163,7 +144,7 @@ export default function CommentPreview(props: {comment: CommentData}) {
                 {showReplies ? "Hide Replies" : "Show Replies"}
             </Button>
             {showReplies && (
-                <Box sx={{display: 'flex', justifyContent: 'space-between', gap: 0}}>
+                <Box sx={{mt: 3, display: 'flex', justifyContent: 'space-between', gap: 0}}>
                     <Replies commentId={comment.id}/>
                 </Box>
             )}

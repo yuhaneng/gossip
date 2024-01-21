@@ -69,6 +69,7 @@ class UsersController < ApplicationController
     def respond_auth_data(remember)
         render json: {
             username: @user.username,
+            admin: @user.admin,
             access_token: create_token(@user, "ACCESS"),
             access_expiry: Time.now.to_i + Constants::ACCESS_VALIDITY,
             refresh_token: remember ? create_token(@user, "REFRESH") : "",

@@ -9,13 +9,21 @@ export default function AlertBox() {
     const {active, alert, severity} = useAppSelector(selectAlert);
 
     return (
-        <Container sx={{width: '100%', display: 'flex', justifyContent: 'center', mt: 1, height: 50}}>
+        <Container sx={{
+            position: 'fixed', 
+            width: '100%', 
+            display: 'flex', 
+            justifyContent: 'center', 
+            top: 25, 
+            zIndex: 1
+        }}>
             {active 
                 ? (
                     <Alert 
                         variant="filled" 
                         severity={severity} 
                         onClose={() => {dispatch(destroyAlert())}}
+                        sx={{boxShadow: 5}}
                     >
                         <Typography sx={{width: 500}}>
                             {alert}

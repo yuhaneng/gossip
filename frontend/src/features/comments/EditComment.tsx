@@ -1,8 +1,8 @@
 import { useEditCommentMutation, useGetCommentQuery } from './commentsApi';
-import { useAppDispatch, useCheckCorrectUserStrict, useCheckSignedIn } from '../../app/hooks';
-import { Link, useNavigate, useParams } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { createAlert, getErrorMessage } from '../alert/alertSlice';
+import { useAppDispatch, useCheckCorrectUserStrict, useCheckSignedIn, useErrorAlert, useFormHandler, useOnSuccess } from '../../app/hooks';
+import { Link, useParams } from 'react-router-dom';
+import { createAlert } from '../alert/alertSlice';
+import { validateContent } from '../../app/validations';
 import {
     Container,
     Box,
@@ -12,77 +12,41 @@ import {
 } from '@mui/material';
 
 export default function EditComment() {
-    const {id = "0"} = useParams();
-    const {data: oldComment, isLoading: commentLoading, error: commentError} = useGetCommentQuery(id)
     useCheckSignedIn();
+
+    const dispatch = useAppDispatch();
+
+    const {id = "0"} = useParams();
+    const {data: oldComment, error: commentError} = useGetCommentQuery(id)
+    
     useCheckCorrectUserStrict(oldComment ? oldComment.author : "");
 
-    const [edit, {isSuccess: editSuccess, isLoading: editLoading, error: editError}] = useEditCommentMutation();
-    const navigate = useNavigate();
-    const dispatch = useAppDispatch();
-    const [content, setContent] = useState("")
-    const [contentError, setContentError] = useState(false);
+    const [edit, {isSuccess: editSuccess, error: editError}] = useEditCommentMutation();
 
-    useEffect(() => {
-        if (commentError) {
-            dispatch(createAlert({
-                severity: "error",
-                alert: getErrorMessage(commentError)
-            }));
-        } 
-
-        if (oldComment) {
-            setContent(oldComment.content);
-        }
-
-        if (editError) {
-            dispatch(createAlert({
-                severity: "error",
-                alert: getErrorMessage(editError)
-            }));
-        }
-
-        if (editSuccess) {
-            dispatch(createAlert({
-                severity : "success",
-                alert: "Comment created successfully."
-            }));
-            navigate(oldComment ? `/posts/${oldComment.post_id}` : '/posts');
-        }
-    }, [commentError, oldComment, editError, editSuccess])
-
-    function handleInput(event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
-        setContent(event.target.value);
-        setContentError(false);
+    interface FormData {
+        content: string
     }
+    const {formData, formError, handleInput, handleError} = useFormHandler<FormData>({
+        content: ""
+    }, oldComment)
 
-    function validateInput() {
-        let isValid = false;
-        let error = "";
-        if (content.length === 0) {
-            setContentError(true);
-            error = "Content is required."
-        } else if (content.length > 255) {
-            setContentError(true);
-            error = "Content too long. Maximum 255 characters."
-        } else {
-            isValid = true;
-        }
-        return {isValid, error};
-    }
+    useErrorAlert(commentError);
+    useErrorAlert(editError);
+    useOnSuccess(editSuccess, "Comment created successfully.", oldComment ? `/posts/${oldComment.post_id}` : '/posts');
 
     function handleEdit() {
-        const {isValid, error} = validateInput();
-        if (isValid) {
+        const contentError = validateContent(formData.content);
+        if (!contentError) {
             edit({
                 id: id,
                 postId: oldComment ? oldComment.post_id : "0",
-                content: content,
+                content: formData.content,
             });
         } else {
+            handleError({content: true});
 			dispatch(createAlert({
 				severity: "error",
-				alert: error
+				alert: contentError
 			}));
         }
     }
@@ -91,7 +55,7 @@ export default function EditComment() {
         <Container maxWidth="sm">
             <Box
                 sx={{
-                mt: 8,
+                mt: 12,
                 mb: 16,
                 display: 'flex',
                 flexDirection: 'column',
@@ -114,9 +78,9 @@ export default function EditComment() {
                           }}
                         multiline
                         rows={8}
-                        value={content}
-                        onChange={handleInput}
-                        error={contentError}
+                        value={formData.content}
+                        onChange={(e) => handleInput({content: e.target.value})}
+                        error={formError.content}
                     />
                     <Button
                         fullWidth

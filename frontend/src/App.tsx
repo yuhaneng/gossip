@@ -4,7 +4,7 @@ import AlertBox from './features/alert/AlertBox';
 import './App.css';
 import { useAppDispatch, useAppSelector, useAutoSignIn } from './app/hooks';
 import Cookies from 'js-cookie';
-import { selectCanRefresh, selectIsSignedIn } from './features/users/cookiesSlice';
+import { selectCanRefresh, selectIsSignedIn } from './features/users/usersSlice';
 
 const showCookies = false;
 
