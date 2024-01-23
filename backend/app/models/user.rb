@@ -4,6 +4,7 @@ class User < ApplicationRecord
     
     validates :username, length: { maximum: 20 }, presence: true, uniqueness: true
     validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, presence: true, uniqueness: true
+    validates :about, length: { maximum: 1000 }
 
     has_many :posts
     has_many :comments

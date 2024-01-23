@@ -51,6 +51,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_01_18_095344) do
     t.string "tags", default: [], array: true
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["tags"], name: "index_posts_on_tags", using: :gin
     t.index ["user_id"], name: "index_posts_on_user_id"
   end
 
@@ -79,6 +80,9 @@ ActiveRecord::Schema[7.1].define(version: 2024_01_18_095344) do
     t.string "email"
     t.string "password_digest"
     t.boolean "admin", default: false
+    t.string "about", default: ""
+    t.boolean "ui_style", default: false
+    t.boolean "privacy", default: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_users_on_email", unique: true

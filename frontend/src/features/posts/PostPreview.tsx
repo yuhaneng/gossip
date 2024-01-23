@@ -23,13 +23,14 @@ export default function PostPreview(props: {post: PostData}) {
                 sx={{
                     width: "100%", 
                     mb: 3, 
-                    '&:hover': {bgcolor: "#F8F8F8"}, 
+                    '&:hover': {bgcolor: "secondary.light"}, 
                     borderRadius: 2, 
                     p: 2,
-                    border: '1px solid #EEE'
+                    border: '1px solid #EEE',
+                    borderColor: 'secondary.light'
                 }}
             >
-                <Typography variant="h3" component="h2" sx={{fontSize: '1.5em', fontWeight: 800}}>
+                <Typography variant="h3" component="h2" noWrap sx={{fontSize: '1.5em', fontWeight: 800}}>
                     {post.title}
                 </Typography>
                 <Typography component="p" height={50} noWrap >

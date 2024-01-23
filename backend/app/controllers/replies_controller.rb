@@ -3,13 +3,15 @@ class RepliesController < ApplicationController
   before_action :authenticate_user, except: %i[ index show ]
   before_action :correct_user, only: %i[ update destroy ]
 
-  # GET /replies
+  # GET /replies?sort=:sort&page=:page&user=:user
+  # GET /replies?sort=:sort&page=:page&comment=:comment
+  # Get replies by user or comment, sorted and paginated.
   def index
     if (params[:page])
 
       # Get replies by username.
       if (params[:user])
-        user = User.find_by(username: params[:user])
+        user = User.find_by(id: params[:user])
         replies = user.replies if !user.nil?
 
       # Get replies by comment.
@@ -36,11 +38,13 @@ class RepliesController < ApplicationController
   end
 
   # GET /replies/1
+  # Get reply by id.
   def show
     render json: create_reply_data(@reply)
   end
 
   # POST /replies
+  # Create new reply under current user and comment specified by id.
   def create
     @reply = current_user.replies.build(reply_params)
     @comment = Comment.find_by(id: reply_params[:comment_id])
@@ -54,6 +58,7 @@ class RepliesController < ApplicationController
   end
 
   # PATCH/PUT /replies/1
+  # Update reply by id.
   def update
     if @reply.update(edit_params)
       head :ok
@@ -63,6 +68,7 @@ class RepliesController < ApplicationController
   end
 
   # DELETE /replies/1
+  # Delete reply by id.
   def destroy
     if @reply.destroy
       head :ok
@@ -72,6 +78,7 @@ class RepliesController < ApplicationController
   end
 
   # POST /replies/:id/vote
+  # Destroy old reply vote if exists, create new reply vote if upvoted or downvoted.
     def vote
       old_vote = current_user.reply_votes.find_by(reply_id: params[:id])
       old_vote.destroy! if !old_vote.nil?
@@ -89,6 +96,7 @@ class RepliesController < ApplicationController
     end
 
   private
+    # Set @reply to reply specified by id.
     def set_reply
       @reply = Reply.find_by(id: params[:id])
       render json: {error: "Could not find reply."}, status: :unprocessable_entity if @reply.nil?
@@ -106,12 +114,13 @@ class RepliesController < ApplicationController
       params.require(:vote).permit(:vote)
     end
 
-    # Check user is querying their own comment before allowing update or destroy.
+    # Check user is querying their own reply or is admin before allowing update or destroy.
     def correct_user
       reply = current_user.replies.find_by(id: params[:id])
       render json: {error: "Not authorized to perform this action."}, status: :unauthorized if reply.nil? && !current_user.admin
     end
 
+    # Create reply data, including current user's vote.
     def create_reply_data(reply)
       if logged_in? 
         vote = current_user.reply_votes.find_by(reply_id: reply.id)
@@ -130,6 +139,7 @@ class RepliesController < ApplicationController
 
       reply_data = {
         id: reply.id,
+        author_id: !reply.user.nil? ? reply.user.id : "",
         author: !reply.user.nil? ? reply.user.username : "",
         comment_id: reply.comment_id,
         post_id: reply.comment.post.id,

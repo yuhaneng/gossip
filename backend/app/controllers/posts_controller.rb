@@ -3,13 +3,15 @@ class PostsController < ApplicationController
     before_action :authenticate_user, except: %i[ index show ]
     before_action :correct_user, only: %i[ update destroy ]
   
-    # GET /posts?
+    # GET /posts?sort=:sort&page=:page&user=:user
+    # GET /comments?sort=:sort&page=:page&tags=:tags
+    # Get posts by user or tags, sorted and paginated.
     def index
       if (params[:sort] && params[:page])
 
         # Get posts by username.
         if (params[:user])
-          user = User.find_by(username: params[:user])
+          user = User.find_by(id: params[:user])
           posts = user.posts if !user.nil?
   
         # Get posts by tags.
@@ -50,11 +52,13 @@ class PostsController < ApplicationController
     end
   
     # GET /posts/:id
+    # Get post by id.
     def show
       render json: create_post_data(@post, true)
     end
   
     # POST /posts
+    # Create new post under current user.
     def create
       @post = current_user.posts.build(post_params)
   
@@ -66,6 +70,7 @@ class PostsController < ApplicationController
     end
   
     # PATCH/PUT /posts/:id
+    # Update post by id.
     def update
       if @post.update(post_params)
         head :ok
@@ -75,6 +80,7 @@ class PostsController < ApplicationController
     end
   
     # DELETE /posts/:id
+    # Destroy post by id.
     def destroy
       if @post.destroy
         head :ok
@@ -84,6 +90,7 @@ class PostsController < ApplicationController
     end
   
     # POST /posts/:id/vote
+    # Destroy old post vote if exists, create new post vote if upvoted or downvoted.
     def vote
       old_vote = current_user.post_votes.find_by(post_id: params[:id])
       old_vote.destroy! if !old_vote.nil?
@@ -101,7 +108,7 @@ class PostsController < ApplicationController
     end
   
     private
-      # Find specified post before update or destroy.
+      # Set @post to post specified by id.
       def set_post
         @post = Post.find(params[:id])
         render json: {error: "Could not find post."}, status: :unprocessable_entity if @post.nil?
@@ -115,12 +122,13 @@ class PostsController < ApplicationController
         params.require(:vote).permit(:vote)
       end
   
-      # Check user is querying their own post before allowing update or destroy.
+      # Check user is querying their own post or is an admin before allowing update or destroy.
       def correct_user
         post = current_user.posts.find_by(id: params[:id])
         render json: {error: "Not authorized to perform this action."}, status: :unauthorized if post.nil? && !current_user.admin
       end
   
+      # Create post data, including current user's vote.
       def create_post_data(post, show_vote)
         if show_vote && logged_in? 
           vote = current_user.post_votes.find_by(post_id: post.id)
@@ -139,6 +147,7 @@ class PostsController < ApplicationController
 
         post_data = {
             id: post.id,
+            author_id: !post.user.nil? ? post.user.id : "",
             author: !post.user.nil? ? post.user.username : "",
             title: post.title, 
             content: post.content, 

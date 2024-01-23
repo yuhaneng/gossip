@@ -9,7 +9,8 @@ import {
     Typography,
     IconButton,
     Menu,
-    MenuItem
+    MenuItem,
+    Grid
  } from '@mui/material';
  import {
     ThumbUp,
@@ -19,23 +20,31 @@ import {
 
 export default function ReplyPreview(props: {reply: ReplyData}) {
     const reply = props.reply;
-    const isAuthor = useCheckCorrectUserRelax(reply ? reply.author : "");
+
+    // Is the signed in user the author of the reply or an admin.
+    const isAuthor = useCheckCorrectUserRelax(reply ? reply.author_id : "");
+    
+    // To toggle options menu.
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const [deleteReply, {isSuccess: deleteSuccess, error: deleteError}] = useDeleteReplyMutation();
-    const [voteReply, {error: voteError}] = useVoteReplyMutation();
-
-    useErrorAlert(deleteError);
-    useErrorAlert(voteError);
-    useOnSuccess(deleteSuccess, "Comment deleted successfully.", 0);
-
     const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
     };
-
     const handleClose = () => {
         setAnchorEl(null);
     };
 
+    // Get delete and vote reply triggers, isSuccess and error states.
+    const [deleteReply, {isSuccess: deleteSuccess, error: deleteError}] = useDeleteReplyMutation();
+    const [voteReply, {error: voteError}] = useVoteReplyMutation();
+
+    // Create error alert if delete or vote reply fails.
+    useErrorAlert(deleteError);
+    useErrorAlert(voteError);
+
+    // Create success alert if delete reply successful.
+    useOnSuccess(deleteSuccess, "Comment deleted successfully.");
+
+    // Use vote mutation.
     function handleVote(vote: "up" | "down") {
         if (reply.user_vote === vote) {
             voteReply({id: reply.id, vote: "none"})
@@ -54,45 +63,49 @@ export default function ReplyPreview(props: {reply: ReplyData}) {
                 mt: 2
             }}
         >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, mb: 2 }}>
-                <Typography component="p" >
-                    {reply.content}
-                </Typography>
-                {isAuthor && <Box>
-                    <IconButton
-                        size="large"
-                        aria-label="options"
-                        aria-controls="menu-appbar"
-                        aria-haspopup="true"
-                        onClick={handleMenu}
-                        color="inherit"
-                    >
-                        <MoreVert sx={{color: "#AAA"}} />
-                    </IconButton>
-                    <Menu
-                        sx={{ mt: '45px' }}
-                        id="menu-appbar"
-                        anchorEl={anchorEl}
-                        anchorOrigin={{
-                        vertical: 'top',
-                        horizontal: 'right',
-                        }}
-                        keepMounted
-                        transformOrigin={{
-                        vertical: 'top',
-                        horizontal: 'right',
-                        }}
-                        open={Boolean(anchorEl)}
-                        onClose={handleClose}
-                    >
-                        <Link to={`/replies/${reply.id}/edit`} style={{textDecoration: 'none', color: 'inherit'}}>
-                            <MenuItem>Edit Reply</MenuItem>
-                        </Link>
+            <Grid container gap={1}>
+                <Grid item xs={10}>
+                    <Typography component="p" sx={{wordBreak: "break-all"}}>
+                        {reply.content}
+                    </Typography>
+                </Grid>
+                <Grid item xs={1}>
+                    {isAuthor && <Box>
+                        <IconButton
+                            size="large"
+                            aria-label="options"
+                            aria-controls="menu-appbar"
+                            aria-haspopup="true"
+                            onClick={handleMenu}
+                            color="inherit"
+                        >
+                            <MoreVert sx={{color: "#AAA"}} />
+                        </IconButton>
+                        <Menu
+                            sx={{ mt: '45px' }}
+                            id="menu-appbar"
+                            anchorEl={anchorEl}
+                            anchorOrigin={{
+                            vertical: 'top',
+                            horizontal: 'right',
+                            }}
+                            keepMounted
+                            transformOrigin={{
+                            vertical: 'top',
+                            horizontal: 'right',
+                            }}
+                            open={Boolean(anchorEl)}
+                            onClose={handleClose}
+                        >
+                            <Link to={`/replies/${reply.id}/edit`} style={{textDecoration: 'none', color: 'inherit'}}>
+                                <MenuItem>Edit Reply</MenuItem>
+                            </Link>
 
-                        <MenuItem onClick={() => deleteReply(reply.id)}>Delete Reply</MenuItem>
-                    </Menu>
-                </Box>}
-            </Box>
+                            <MenuItem onClick={() => deleteReply(reply.id)}>Delete Reply</MenuItem>
+                        </Menu>
+                    </Box>}
+                </Grid>
+            </Grid>
             <Typography variant="caption" color="#666">
                 {( reply.author ? reply.author : "[Deleted Account]" ) + 
                 " • " + 

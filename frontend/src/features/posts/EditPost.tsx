@@ -13,19 +13,31 @@ import {
 import { validatePostContent, validateTag, validateTitle } from '../../app/validations';
 
 export default function EditPost() {
+    // Redirect user to sign in page if not signed in.
+    useCheckSignedIn();
+
     const dispatch = useAppDispatch();
 
+    // Get post id from page's path.
     const { id = "0" } = useParams();
+
+    // Get post by id.
     const { data: oldPost, error: postError } = useGetPostQuery(id)
 
-    useCheckSignedIn();
-    useCheckCorrectUserStrict(oldPost ? oldPost.author : "");
+    // Redirect user to posts page if not author of post and not admin.
+    useCheckCorrectUserStrict(oldPost ? oldPost.author_id : "");
     
+    // Get edit post trigger, isSuccess and error states.
     const [edit, {isSuccess: editSuccess, error: editError}] = useEditPostMutation();
+
+    // Create error alerts if get post or edit post fails.
     useErrorAlert(postError);
     useErrorAlert(editError);
+
+    // Create success alert and redirect to post page if edit post successful.
     useOnSuccess(editSuccess, "Post edited successfully.", `/posts/${id}`);
 
+    // To handle form data and errors.
     interface FormData {
         title: string,
         content: string,
@@ -39,6 +51,7 @@ export default function EditPost() {
         tags: []
     }, oldPost)
 
+    // Validate tag and create error alert or add tag to tags and reset tag field.
     function handleAddTag(){
         const tagError = validateTag(formData.tag, formData.tags);
         if (!tagError) {
@@ -52,10 +65,12 @@ export default function EditPost() {
         }
     }
 
+    // Remove tag from tags.
     function deleteTag(removeTag: string) {
         handleInput({tags:formData.tags.filter((tag) => tag !== removeTag)})
     }
 
+    // Validate form data and create error alert or use edit post mutation.
     function handleEdit() {
         const titleError = validateTitle(formData.title);
         const contentError = validatePostContent(formData.content);
@@ -170,7 +185,7 @@ export default function EditPost() {
                         <Button
                             fullWidth
                             variant="contained"
-                            sx={{ mt: 3, mb: 2, bgcolor: '#BBB', '&:hover': { bgcolor: '#888'} }}
+                            sx={{ mt: 3, mb: 2, bgcolor: 'secondary.main', '&:hover': { bgcolor: 'secondary.dark'} }}
                         >
                             Cancel
                         </Button>

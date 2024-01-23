@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch } from "../../app/hooks";
-import { updateUser } from "./usersSlice";
+import { updateUser } from "../profile/usersSlice";
 import { resetUsers } from "./usersApi";
 import { resetPosts } from "../posts/postsApi";
 import { resetComments } from "../comments/commentsApi";
@@ -13,9 +13,12 @@ import {
 } from '@mui/material'
 
 export default function SignOut() {
+    // Get navigate trigger.
     const navigate = useNavigate();
+
     const dispatch = useAppDispatch();
 
+    // Clear all Api caches, reset store, redirect to posts page.
     function handleSignOut() {
         dispatch(resetUsers());
         dispatch(resetPosts());

@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { createAlert } from '../alert/alertSlice';
 import { useAppDispatch, useErrorAlert, useFormHandler } from '../../app/hooks';
-import { updateUser } from './usersSlice';
+import { updateUser } from '../profile/usersSlice';
 import { validateEmail, validatePassword, validateUsername } from "../../app/validations";
 import {
 	Container,
@@ -22,10 +22,14 @@ import {LockOutlined} from '@mui/icons-material'
 export default function SignUp() {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
+
+	// Get signup trigger, data and error states.
     const [signUp, {data: authData, error}] = useSignUpMutation();
 
+	// Create error alert if sign up fails.
 	useErrorAlert(error);
 
+	// To handle form data and errors.
     interface FormData {
         username: string,
         email: string,
@@ -41,11 +45,13 @@ export default function SignUp() {
 		remember: false
     })
 
+	// Update store and create success alert and redirect to posts page if sign up successful.
 	useEffect(() => {
 		  if (authData) {
 			dispatch(updateUser(formData.remember 
 				? {
 					type: "signInRemember",
+					id: authData.id,
 					username: authData.username,
 					admin: authData.admin,
 					accessToken: authData.access_token,
@@ -55,6 +61,7 @@ export default function SignUp() {
 				}
 				: {
 					type: "signInForget",
+					id: authData.id,
 					username: authData.username,
 					admin: authData.admin,
 					accessToken: authData.access_token,
@@ -68,6 +75,7 @@ export default function SignUp() {
 		};
 	}, [authData])
 
+	// Validate form data and create error alert or use sign up mutation.
     function handleSignUp() {
 		const usernameError = validateUsername(formData.username);
 		const emailError = validateEmail(formData.email);

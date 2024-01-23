@@ -11,15 +11,25 @@ import {
     TextField
 } from '@mui/material';
 
-export default function EditComment() {
+export default function EditReply() {
+    // Redirect user to sign in page if not signed in.
     useCheckSignedIn();
-    const dispatch = useAppDispatch();
-    const {id = "0"} = useParams();
-    const {data: oldReply, error: replyError} = useGetReplyQuery(id)
-    useCheckCorrectUserStrict(oldReply ? oldReply.author : "");
 
+    const dispatch = useAppDispatch();
+
+    // Get reply id from page's path.
+    const {id = "0"} = useParams();
+
+    // Get reply by id.
+    const {data: oldReply, error: replyError} = useGetReplyQuery(id)
+
+    // Redirect user to posts page if user is not author of reply and not admin.
+    useCheckCorrectUserStrict(oldReply ? oldReply.author_id : "");
+
+    // Get edit reply trigger, isSuccess and error states.
     const [edit, {isSuccess: editSuccess, error: editError}] = useEditReplyMutation();
 
+    // Handle form data and errors.
     interface FormData {
         content: string
     }
@@ -27,10 +37,14 @@ export default function EditComment() {
         content: ""
     }, oldReply)
 
+    // Create error alerts if get or edit reply fails.
     useErrorAlert(replyError);
     useErrorAlert(editError);
+
+    // Create success alert and redirect to post page if edit reply successful.
     useOnSuccess(editSuccess, "Reply created successfully.", oldReply ? `/posts/${oldReply.post_id}` : '/posts');
 
+    // Validate form data and create error alert or use edit reply mutation.
     function handleEdit() {
         const contentError = validateContent(formData.content);
         if (!contentError) {
@@ -87,11 +101,11 @@ export default function EditComment() {
                     >
                         Edit Reply
                     </Button>
-                    <Link to={oldReply ? `/posts/${oldReply.comment_id}` : '/posts'}>
+                    <Link to={oldReply ? `/posts/${oldReply.post_id}` : '/posts'}>
                         <Button
                             fullWidth
                             variant="contained"
-                            sx={{ mt: 3, mb: 2, bgcolor: '#BBB', '&:hover': { bgcolor: '#888'} }}
+                            sx={{ mt: 3, mb: 2, bgcolor: 'secondary.main', '&:hover': { bgcolor: 'secondary.dark'} }}
                         >
                             Cancel
                         </Button>

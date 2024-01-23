@@ -13,36 +13,52 @@ import {
 import { Search } from '@mui/icons-material';
 
 export default function Posts() {
+    // To handle pagination.
     const [page, setPage] = useState(1);
+
+    // To handle sorting.
     const [sortBy, setSortBy] = useState<"time" | "rating">("time");
+
+    // To handle searching by tags.
     const [tags, setTags] = useState<string[]>([]);
+
+    // Get posts by tags, paginated and sorted.
     const {data: posts, error } = useGetPostsByTagsQuery({
         page: page,
         sortBy: sortBy,
         tags: tags
     });
+    
+    // Is the page scrolled to the bottom.
     const atBottom = useScroll();
+
+    // To handle searchbar input.
     const [searchbar, setSearchbar] = useState("");
 
+    // Create error alert if get posts fails.
     useErrorAlert(error);
 
+    // Increase page when scrolled to bottom.
     useEffect(() => {
         if (atBottom) {
             setPage(page + 1);
         }
     }, [atBottom])
 
+    // Add tag to tags, clear searchbar field, set page to 1.
     function handleAddTag() {
         setTags(tags.concat(searchbar));
         setSearchbar("");
         setPage(1);
     }
 
+    // Remove tag from tags, set page to 1.
     function handleDeleteTag(removeTag: string) {
         setTags(tags.filter((tag) => tag !== removeTag));
         setPage(1);
     }
 
+    // Change sort by and set page to 1.
     function handleSort(sort: "time" | "rating") {
         setSortBy(sort);
         setPage(1);

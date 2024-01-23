@@ -8,5 +8,6 @@ class CreatePosts < ActiveRecord::Migration[7.1]
 
       t.timestamps
     end
+    add_index :posts, :tags, using: 'gin'
   end
 end

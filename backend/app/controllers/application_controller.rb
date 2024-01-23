@@ -25,6 +25,7 @@ class ApplicationController < ActionController::API
         end
     end
 
+    # Get token from Authorization header.
     def header_token
         header = request.headers["Authorization"]
         if !header.nil?

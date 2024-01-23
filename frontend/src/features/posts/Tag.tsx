@@ -16,7 +16,7 @@ export default function Tag(props: {tag: string}) {
                 textTransform: 'none',
                 '&:hover': {
                     borderColor: "#B44", 
-                    backgroundColor: "#EBB",
+                    backgroundColor: "error.dark",
                     color: 'black',
                 }}}
             >

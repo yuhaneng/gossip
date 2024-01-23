@@ -1,12 +1,12 @@
 import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit';
 import usersApi from '../features/users/usersApi';
-import usersReducer from '../features/users/usersSlice';
+import usersReducer from '../features/profile/usersSlice';
 import alertReducer from '../features/alert/alertSlice';
 import postsApi from '../features/posts/postsApi';
 import commentsApi from '../features/comments/commentsApi';
 import repliesApi from '../features/replies/repliesApi';
 
-export const API_URL = "http://localhost:3000/"
+export const API_URL = "http://localhost:3000/";
 
 export const store = configureStore({
   reducer: {

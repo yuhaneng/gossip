@@ -1,6 +1,8 @@
 class UsersController < ApplicationController
-    before_action :authenticate_user, only: %i[ show update destroy ]
+    before_action :set_user, only: %i[ show update destroy change_password ]
+    before_action :authenticate_user, only: %i[ update change_password destroy ]
     before_action :authenticate_refresh, only: %i[ refresh ]
+    before_action :correct_user, only: %i[ update destroy change_password ]
 
     # Create new user and respond with authentication data.
     def signup
@@ -28,19 +30,44 @@ class UsersController < ApplicationController
         respond_auth_data( true )
     end
 
+    # Show specified user's profile.
     def show
-        render json: current_user.attributes.slice("username", "email", "created_at")
+        if logged_in? && (current_user.admin || current_user.id === @user) || @user.privacy
+            render json: @user.attributes.slice("id", "username", "email", "created_at", "about", "ui_style", "privacy")
+        else
+            render json: @user.attributes.slice("id", "username", "privacy")
+        end
+    end
+
+    # Show current user's own profile.
+    def show_self
+        render json: current_user.attributes.slice("id", "username", "email", "created_at", "about", "ui_style", "privacy")
     end
     
     def update
-        current_user.update!(profile_params)
+        @user.update!(profile_params)
+    end
+
+     # Authenticate old password and update new password.
+     def change_password
+        if @user.authenticate(change_password_params[:old_password])
+            @user.update!(password: change_password_params[:password])
+        else
+            render json: {error: "Incorrect password."}, status: :unauthorized
+        end
     end
     
     def destroy
-        current_user.destroy!
+        @user.destroy!
     end
 
     private
+
+    def set_user
+        @user = User.find_by(id: params[:id])
+        render json: {error: "User not found."}, status: :unprocessable_entity if @user.nil?
+    end
+
 
     def signup_params
         params.require(:user).permit(:username, :email, :password)
@@ -51,12 +78,21 @@ class UsersController < ApplicationController
     end
 
     def profile_params
-        params.require(:profile).permit(:username, :email)
+        params.require(:profile).permit(:username, :email, :about, :ui_style, :privacy)
+    end
+
+    def change_password_params
+        params.require(:profile).permit(:old_password, :password)
     end
 
     # Authenticate access token.
     def authenticate_user
         render json: {error: "Not logged in."}, status: :unauthorized if !logged_in?
+    end
+
+    # Check user is querying their own profile before allowing update or destroy.
+    def correct_user
+        render json: {error: "Not authorized to perform this action."}, status: :unauthorized if current_user.id != @user.id && !current_user.admin
     end
 
     # Authenticate refresh token.
@@ -68,6 +104,7 @@ class UsersController < ApplicationController
     # Refresh token is created if remember is true.
     def respond_auth_data(remember)
         render json: {
+            id: @user.id,
             username: @user.username,
             admin: @user.admin,
             access_token: create_token(@user, "ACCESS"),

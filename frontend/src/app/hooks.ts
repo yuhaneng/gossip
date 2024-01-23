@@ -1,13 +1,12 @@
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import type { RootState, AppDispatch } from './store';
-import { checkCookies, selectAdmin, selectCanRefresh, selectIsSignedIn, selectUsername, updateUser } from '../features/users/usersSlice';
+import { checkCookies, selectAdmin, selectCanRefresh, selectId, selectIsSignedIn, updateUser } from '../features/profile/usersSlice';
 import { useRefreshSessionMutation } from '../features/users/usersApi';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { createAlert } from '../features/alert/alertSlice';
-import { FetchBaseQueryError, MutationActionCreatorResult, MutationDefinition } from '@reduxjs/toolkit/query';
+import { createAlert, getErrorMessage } from '../features/alert/alertSlice';
+import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { SerializedError } from '@reduxjs/toolkit';
-import { validateContent, validateEmail, validatePassword, validatePostContent, validateTitle, validateUsername } from './validations';
 
 // Use throughout your app instead of plain `useDispatch` and `useSelector`
 export const useAppDispatch = () => useDispatch<AppDispatch>();
@@ -26,6 +25,7 @@ export function useAutoSignIn() {
             refresh().unwrap()
                 .then((value) => dispatch(updateUser({
                     type: "signInRemember", 
+                    id: value.id,
                     username: value.username,
                     admin: value.admin,
                     accessToken: value.access_token,
@@ -54,6 +54,7 @@ export function useCheckSignedIn() {
                 refresh().unwrap()
                     .then((value) => dispatch(updateUser({
                         type: "signInRemember", 
+                        id: value.id,
                         username: value.username,
                         admin: value.admin,
                         accessToken: value.access_token,
@@ -66,52 +67,52 @@ export function useCheckSignedIn() {
                             severity : "error",
                             alert : "Not signed in."
                         }));
-                        navigate('users/signin');
+                        navigate('/users/signin');
                     })
             } else {
                 dispatch(createAlert({
                     severity : "error",
                     alert : "Not signed in."
                 }));
-                navigate('users/signin')
+                navigate('/users/signin')
             }
         }
     }, [isSignedIn, canRefresh])
 }
 
-// Returns whether checkname and username match.
-export function useCheckCorrectUserRelax(checkname: string) {
+// Returns whether checkid and user's id match.
+export function useCheckCorrectUserRelax(checkid: string) {
     const [match, setMatch] = useState(true);
-    const username = useAppSelector(selectUsername);
+    const id = useAppSelector(selectId);
     const admin = useAppSelector(selectAdmin);
 
     useEffect(() => {
-        if (checkname !== "" && username !== checkname && !admin) {
+        if (checkid !== "" && id !== checkid && !admin) {
             setMatch(false)
         } else {
             setMatch(true)
         }
-    }, [checkname])
+    }, [checkid])
 
     return match
 }
 
-// Redirects to posts page if checkname and username do not match.
-export function useCheckCorrectUserStrict(checkname: string) {
+// Redirects to posts page if checkid and user's id do not match.
+export function useCheckCorrectUserStrict(checkid: string) {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
-    const username = useAppSelector(selectUsername);
+    const id = useAppSelector(selectId);
     const admin = useAppSelector(selectAdmin);
 
     useEffect(() => {
-        if (checkname !== "" && username !== checkname && !admin) {
+        if (checkid !== "" && id !== checkid && !admin) {
             dispatch(createAlert({
                 severity : "error",
                 alert : "Not authorized to access this page."
             }));
             navigate("/posts")
         }
-    }, [checkname])
+    }, [checkid])
 }
 
 // Returns whether the user is at the bottom of the page.
@@ -140,26 +141,6 @@ export function useScroll() {
     return atBottom;
 }
 
-// Returns error message from all error data types.
-function getErrorMessage(error: FetchBaseQueryError | SerializedError) {
-    let errorMessage: string;
-    if ('status' in error) {
-        if ('error' in error) {
-            errorMessage = error.error;
-        } else {
-            errorMessage = (error.data as { error: string }).error;
-            // errorMessage = JSON.stringify(error.data)
-        }
-    } else {
-        if ('message' in error) {
-            errorMessage = error.message!;
-        } else {
-            errorMessage = "Unknown Error";
-        }
-    }
-    return errorMessage;
-}  
-
 // Creates error alert when new error detected.
 export function useErrorAlert(error: FetchBaseQueryError | SerializedError | undefined) {
     const dispatch = useAppDispatch();
@@ -174,8 +155,8 @@ export function useErrorAlert(error: FetchBaseQueryError | SerializedError | und
     }, [error])
 }
 
-// Creates success alert when successful.
-export function useOnSuccess(isSuccess: boolean, message: string, link: string | number) {
+// Creates success alert, navigates to link and performs optional action when successful.
+export function useOnSuccess(isSuccess: boolean, message: string, link?: string | number, action?: () => void) {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
@@ -187,45 +168,49 @@ export function useOnSuccess(isSuccess: boolean, message: string, link: string |
             }));
             if (typeof link === 'string') {
                 navigate(link);
-            } else {
+            } else if (typeof link === 'number'){
                 navigate(link);
             }
-            
+            if (action) {
+                action();
+            }
         }
     }, [isSuccess])
 }
 
-// Create form data and form error handlers, automatically fill in autoFillData when it is received.
-export function useFormHandler<FormData>(initialData: FormData, autoFillData?: {[field in keyof FormData]?: any} | undefined){
-    const [formData, setFormData] = useState(initialData);
-    
-    type FormError = {[field in keyof FormData]: boolean};
-    const initialError: FormError = 
-        Object.keys(initialData as {[field in keyof FormData]: string}).reduce(
-            (o: FormError, key: string) => Object.assign(o, {[key]: false}), 
-            {} as FormError
-        );
-    const [formError, setFormError] = useState(initialError);
-
-    function handleInput(inputs: {[field in keyof FormData]?: any}) {
-        setFormData({...formData, ...inputs});
-        const errorsReset: FormError = 
-            Object.keys(inputs).reduce(
-                (o: FormError, key: any) => Object.assign(o, {[key]: false}), 
+// Create form data and form error state handlers, 
+// automatically fill in autoFillData when it is received.
+export function useFormHandler<FormData>
+    (initialData: FormData, autoFillData?: {[field in keyof FormData]?: any} | undefined){
+        const [formData, setFormData] = useState(initialData);
+        
+        type FormError = {[field in keyof FormData]: boolean};
+        const initialError: FormError = 
+            Object.keys(initialData as {[field in keyof FormData]: string}).reduce(
+                (o: FormError, key: string) => Object.assign(o, {[key]: false}), 
                 {} as FormError
             );
-        setFormError(errorsReset)
-    }
+        const [formError, setFormError] = useState(initialError);
 
-    function handleError(errors: {[field in keyof FormData]?: boolean}) {
-        setFormError({...formError, ...errors});
-    }
-    
-    useEffect(() => {
-        if (autoFillData) {
-            handleInput(autoFillData)
+        function handleInput(inputs: {[field in keyof FormData]?: any}) {
+            setFormData({...formData, ...inputs});
+            const errorsReset: FormError = 
+                Object.keys(inputs).reduce(
+                    (o: FormError, key: any) => Object.assign(o, {[key]: false}), 
+                    {} as FormError
+                );
+            setFormError(errorsReset)
         }
-    }, [autoFillData])
 
-    return {formData, formError, handleInput, handleError}
+        function handleError(errors: {[field in keyof FormData]?: boolean}) {
+            setFormError({...formError, ...errors});
+        }
+        
+        useEffect(() => {
+            if (autoFillData) {
+                handleInput(autoFillData)
+            }
+        }, [autoFillData])
+
+        return {formData, formError, handleInput, handleError}
 }

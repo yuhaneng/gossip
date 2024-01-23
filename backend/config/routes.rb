@@ -3,10 +3,13 @@ Rails.application.routes.draw do
   post '/signup', to: 'users#signup'
   post '/signin', to: 'users#signin'
   post '/refresh', to: 'users#refresh'
-  get '/profile', to: 'users#show'
-  post '/profile', to: 'users#update'
-  put '/profile', to: 'users#update'
-  delete '/profile', to: 'users#destroy'
+
+  get 'profile/self', to: 'users#show_self'
+  get 'profile/:id', to: 'users#show'
+  post 'profile/:id', to: 'users#update'
+  put 'profile/:id', to: 'users#update'
+  delete 'profile/:id', to: 'users#destroy'
+  put 'profile/:id/password', to: 'users#change_password'
 
   # Posts routes.
   resources :posts, only: %i[ index show create update destroy ]

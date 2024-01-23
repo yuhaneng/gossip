@@ -1,9 +1,9 @@
 import { useNavigate } from "react-router-dom";
-import { useSignInMutation } from "./usersApi";
+import usersApi, { useSignInMutation } from "./usersApi";
 import { useEffect } from 'react';
 import { useAppDispatch, useErrorAlert, useFormHandler } from '../../app/hooks';
 import { Link } from 'react-router-dom';
-import { updateUser } from './usersSlice';
+import { updateUser } from '../profile/usersSlice';
 import {
     Container,
     Box,
@@ -20,8 +20,11 @@ import { LockOutlined } from '@mui/icons-material';
 export default function SignIn() {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
+
+    // Get signin trigger, data and error states.
     const [signIn, {data: authData, error}] = useSignInMutation();
 
+    // To handle form data and errors.
     interface FormData {
         username: string,
         password: string,
@@ -33,23 +36,28 @@ export default function SignIn() {
         remember: false
     })
 
+    // Create error alert if sign in fails.
     useErrorAlert(error);
 
+    // Set username and password fields error to true if sign in fails.
     useEffect(() => {
         if (error) {
             handleError({username: true, password: true})
         }
     }, [error])
 
+    // Use sign in mutation.
     function handleSignIn() {
         signIn(formData);
     }
 
+    // Update store and redirect to posts page if sign in successful.
     useEffect(() => {
         if (authData) {
             dispatch(updateUser(formData.remember 
                 ? {
                     type: "signInRemember",
+                    id: authData.id,
                     username: authData.username,
                     admin: authData.admin,
                     accessToken: authData.access_token,
@@ -59,6 +67,7 @@ export default function SignIn() {
                 }
                 : {
                     type: "signInForget",
+                    id: authData.id,
                     username: authData.username,
                     admin: authData.admin,
                     accessToken: authData.access_token,

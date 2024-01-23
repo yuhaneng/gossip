@@ -34,11 +34,22 @@ export function validatePassword(password: string, confirmPassword: string) {
     return error
 }
 
+// Validate about.
+export function validateAbout(about: string) {
+    let error = "";
+    if (about.length > 1000) {
+        error = "About too long. Maximum 1000 characters."
+    }
+    return error
+}
+
 // Validate title.
 export function validateTitle(title: string) {
     let error = "";
     if (title.length === 0) {
         error = "Title is required."
+    } else if (title.length > 255) {
+        error = "Title too long. Maximum 255 characters."
     }
     return error
 }

@@ -12,17 +12,24 @@ import {
 } from '@mui/material';
 
 export default function EditComment() {
+    // Redirect user to sign in page if not signed in.
     useCheckSignedIn();
 
     const dispatch = useAppDispatch();
 
+    // Get comment id from the page's path.
     const {id = "0"} = useParams();
+
+    // Get comment by id.
     const {data: oldComment, error: commentError} = useGetCommentQuery(id)
     
-    useCheckCorrectUserStrict(oldComment ? oldComment.author : "");
+    // Redirect user to posts page if not author of comment and not admin.
+    useCheckCorrectUserStrict(oldComment ? oldComment.author_id : "");
 
+    // Get edit comment trigger, isSuccess and error states.
     const [edit, {isSuccess: editSuccess, error: editError}] = useEditCommentMutation();
 
+    // To handle form data and errors.
     interface FormData {
         content: string
     }
@@ -30,10 +37,14 @@ export default function EditComment() {
         content: ""
     }, oldComment)
 
+    // Create error alert if get comment or edit comment fails.
     useErrorAlert(commentError);
     useErrorAlert(editError);
-    useOnSuccess(editSuccess, "Comment created successfully.", oldComment ? `/posts/${oldComment.post_id}` : '/posts');
 
+    // Create success alert and redirect to post page if edit comment successful.
+    useOnSuccess(editSuccess, "Comment edited successfully.", oldComment ? `/posts/${oldComment.post_id}` : '/posts');
+
+    // Validate form data and create error alert or use edit comment mutation.
     function handleEdit() {
         const contentError = validateContent(formData.content);
         if (!contentError) {
@@ -94,7 +105,7 @@ export default function EditComment() {
                         <Button
                             fullWidth
                             variant="contained"
-                            sx={{ mt: 3, mb: 2, bgcolor: '#BBB', '&:hover': { bgcolor: '#888'} }}
+                            sx={{ mt: 3, mb: 2, bgcolor: 'secondary.main', '&:hover': { bgcolor: 'secondary.dark'} }}
                         >
                             Cancel
                         </Button>

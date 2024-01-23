@@ -11,23 +11,33 @@ import {
  } from '@mui/material';
 
 export default function Comments(props: {postId: string}) {
+    // To handle pagination.
     const [page, setPage] = useState(1);
+
+    // To handle sorting.
     const [sortBy, setSortBy] = useState<"time" | "rating">("time");
+
+    // Is the page scrolled to the bottom.
     const atBottom = useScroll();
+
+    // Get comments by post, paginated and sorted.
     const { data: comments, error } = useGetCommentsByPostQuery({
         page: page,
         sortBy: sortBy,
         postId: props.postId
     });
 
+    // Create error alert if get comments fails.
     useErrorAlert(error);
 
+    // Increase page when scrolled to bottom.
     useEffect(() => {
         if (atBottom) {
             setPage(page + 1);
         }
     }, [atBottom])
 
+    // Change sort by and set page to one.
     function handleSort(sort: "time" | "rating") {
         setSortBy(sort);
         setPage(1);

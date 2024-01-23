@@ -10,12 +10,16 @@ import {
  } from '@mui/material';
 
 export default function Replies(props: {commentId: string}) {
+    // To handle pagination.
     const [page, setPage] = useState(1);
+
+    // Get replies by comment, paginated and sorted by time.
     const { data: replies, error } = useGetRepliesByCommentQuery({
         page: page,
         commentId: props.commentId
     });
 
+    // Create error alert if get replies fails.
     useErrorAlert(error);
 
     return (

@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useGetPostQuery, useDeletePostMutation, useVotePostMutation } from "./postsApi";
 import { useAutoSignIn, useCheckCorrectUserRelax, useErrorAlert, useOnSuccess } from '../../app/hooks';
 import { useState } from 'react';
@@ -22,28 +22,37 @@ import {
 } from '@mui/icons-material';
 
 export default function Post() {
-    useAutoSignIn();
-    
+    // Get post id from page's path.
     const { id = "0" } = useParams();
+
+    // Get post by id.
     const { data: post, error: postError } = useGetPostQuery(id)
+
+    // Get delete and vote post triggers, isSuccess and error states.
     const [deletePost, {isSuccess: deleteSuccess, error: deleteError}] = useDeletePostMutation();
     const [votePost, { error: voteError}] = useVotePostMutation();
-    const isAuthor = useCheckCorrectUserRelax(post ? post.author : "");
+
+    // Is the signed in user the author of the post or an admin.
+    const isAuthor = useCheckCorrectUserRelax(post ? post.author_id : "");
+
+    // To toggle the options menu.
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-
-    useErrorAlert(postError);
-    useErrorAlert(deleteError);
-    useErrorAlert(voteError);
-    useOnSuccess(deleteSuccess, "Post deleted successfully.", "/posts")
-
     const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
         setAnchorEl(event.currentTarget);
     };
-
     const handleClose = () => {
         setAnchorEl(null);
     };
 
+    // Create error alerts if get, delete or vote post fails.
+    useErrorAlert(postError);
+    useErrorAlert(deleteError);
+    useErrorAlert(voteError);
+
+    // Create success alert and redirect to posts page if delete post successful.
+    useOnSuccess(deleteSuccess, "Post deleted successfully.", "/posts")
+
+    // Use vote mutation.
     function handleVote(vote: "up" | "down") {
         if (post) {
             if (post.user_vote === vote) {
@@ -67,9 +76,9 @@ export default function Post() {
             >
                 {post && (
                     <Box >
-                        <Box sx={{border: '1px solid #EEE', p: 4, borderRadius: 3}}>
+                        <Box sx={{border: '1px solid #EEE', borderColor: 'secondary.dark', p: 4, borderRadius: 3}}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <Typography variant="h3" component="h2" sx={{fontSize: '3em', fontWeight: 800, mb: 0.5}}>
+                                <Typography variant="h3" component="h2" sx={{fontSize: '2em', fontWeight: 800, mb: 0.5, wordBreak: 'break-all'}}>
                                     {post.title}
                                 </Typography>
                                 {isAuthor && <Box>
@@ -108,7 +117,14 @@ export default function Post() {
                                 </Box>}
                             </Box>
                             <Stack direction="row" sx={{mb: 1.5}}>
-                                <Avatar />
+                                <Link to={post.author_id ? `/profile/${post.author_id}` : ''}>
+                                    <IconButton size="small">
+                                        {post.author
+                                            ? (<Avatar>{post.author[0].toUpperCase()}</Avatar>)
+                                            : (<Avatar />)
+                                        }
+                                    </IconButton>
+                                </Link>
                                 <Box sx={{ml: 1}}>
                                     <Typography variant="caption" component="p" color="#666">
                                         {post.author ? post.author : "[Deleted Account]"} 
@@ -147,7 +163,7 @@ export default function Post() {
                             </Box>
                             <Link to="/posts">
                                 <Button variant="outlined" size="small" sx={{right: 10, mt: 3}}>
-                                    Back To Posts
+                                    Back to Posts
                                 </Button>
                             </Link>
                         </Box>

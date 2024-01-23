@@ -13,13 +13,21 @@ import {
 } from '@mui/material';
 
 export default function CreatePost() {
+    // Redirect user to sign in page if not signed in.
     useCheckSignedIn();
-    const dispatch = useAppDispatch();
-    const [create, {isSuccess, isLoading, error}] = useCreatePostMutation();
 
+    const dispatch = useAppDispatch();
+
+    // Get create comment trigger, isSuccess and error states.
+    const [create, {isSuccess, error}] = useCreatePostMutation();
+
+    // Create error alert if create post fails.
     useErrorAlert(error);
+
+    // Create success alert and redirect to posts page if create post successful.
     useOnSuccess(isSuccess, "Post created successfully.", `/posts`);
 
+    // To handle form data and errors.
     interface FormData {
         title: string,
         content: string,
@@ -33,6 +41,7 @@ export default function CreatePost() {
         tags: []
     });
 
+    // Validate tag and create error alert or add tag to tags and reset tag field.
     function handleAddTag(){
         const tagError = validateTag(formData.tag, formData.tags);
         if (!tagError) {
@@ -46,10 +55,12 @@ export default function CreatePost() {
         }
     }
 
+    // Remove tag from tags.
     function deleteTag(removeTag: string) {
         handleInput({tags:formData.tags.filter((tag) => tag !== removeTag)})
     }
 
+    // Validate form data and create error alert or use create post mutation.
     function handleCreate() {
         const titleError = validateTitle(formData.title);
         const contentError = validatePostContent(formData.content);
@@ -163,7 +174,7 @@ export default function CreatePost() {
                         <Button
                             fullWidth
                             variant="contained"
-                            sx={{ mt: 3, mb: 2, bgcolor: '#BBB', '&:hover': { bgcolor: '#888'} }}
+                            sx={{ mt: 3, mb: 2, bgcolor: 'secondary.main', '&:hover': { bgcolor: 'secondary.dark'} }}
                         >
                             Cancel
                         </Button>

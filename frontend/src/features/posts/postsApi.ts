@@ -1,5 +1,6 @@
 import Cookies from 'js-cookie';
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { API_URL } from '../users/usersApi';
 
 interface GetPostsByTagsData {
     page: number,
@@ -29,6 +30,7 @@ interface VotePostData {
 }
 
 export interface PostData extends EditPostData {
+    author_id: string,
     author: string,
     upvotes: number,
     downvotes: number,
@@ -37,12 +39,10 @@ export interface PostData extends EditPostData {
     updated_at: string
 }
 
-const API_URL = "http://localhost:3000/posts"
-
 const postsApi = createApi({
     reducerPath: 'posts',
     baseQuery: fetchBaseQuery( {
-        baseUrl: API_URL,
+        baseUrl: API_URL + '/posts',
         prepareHeaders: (headers) => {
             const token = Cookies.get("accessToken");
             if (token) {
@@ -112,7 +112,7 @@ const postsApi = createApi({
                     }
                 }
             }),
-            invalidatesTags: (result, error, arg) => [{type: "Post", id: arg.id}]
+            invalidatesTags: (result, error, arg) => ["Post", {type: "Post", id: arg.id}]
         })
     })
 })

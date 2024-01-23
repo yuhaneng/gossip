@@ -15,11 +15,14 @@ interface SignInData {
 }
 
 interface EditProfileData {
+    id: string,
     username: string,
-    email: string
+    email: string,
+    about: string
 }
 
 export interface AuthData {
+    id: string,
     username: string,
     admin: boolean,
     access_token: string,
@@ -28,20 +31,40 @@ export interface AuthData {
     refresh_expiry: string
 }
 
-export interface ProfileData {
-    username: string,
-    email: string,
-    created_at: string
+export interface ProfileData extends EditProfileData {
+    created_at: string,
+    ui_style: boolean,
+    privacy: boolean
 }
 
-const API_URL = "http://localhost:3000/"
+interface ChangePasswordData {
+    id: string,
+    oldPassword: string,
+    password: string
+}
+
+interface ChangeSettingsData {
+    id: string,
+    uiStyle: boolean,
+    privacy: boolean
+}
+
+export const API_URL = "http://localhost:3000/"
 
 const usersApi = createApi({
     reducerPath: 'users',
     baseQuery: fetchBaseQuery( {
         baseUrl: API_URL,
         prepareHeaders: (headers, {endpoint}) => {
-            if (endpoint === 'getProfile' || endpoint === 'deleteProfile' || endpoint === 'editProfile') {
+            const accessEndpoints = [
+                'getProfile', 
+                'getOwnProfile',
+                'deleteProfile', 
+                'editProfile', 
+                'changePassword', 
+                'changeSettings'
+            ]
+            if (accessEndpoints.includes(endpoint)) {
                 const accessToken = Cookies.get("accessToken");
                 if (accessToken) {
                     headers.set("Authorization", "Bearer " + accessToken)
@@ -92,27 +115,56 @@ const usersApi = createApi({
             }),
             invalidatesTags: ["Profile"]
         }),
-        getProfile: builder.query<ProfileData, void>({
-            query: () => ({
-                url: "profile"
-            }),
+        getOwnProfile: builder.query<ProfileData, void>({
+            query: () => 'profile/self',
             providesTags: ["Profile"]
         }),
-        deleteProfile: builder.mutation<void, void>({
-            query: () => ({
-                url: 'profile',
+        getProfile: builder.query<ProfileData, string>({
+            query: (id) => `profile/${id}`,
+            providesTags: ["Profile"]
+        }),
+        deleteProfile: builder.mutation<void, string>({
+            query: (id) => ({
+                url: `profile/${id}`,
                 method: 'DELETE'
             }),
             invalidatesTags: ["Profile"]
         }),
         editProfile: builder.mutation<void, EditProfileData>({
             query: (editProfileData) => ({
-                url: 'profile',
+                url: `profile/${editProfileData.id}`,
                 method: 'PUT',
                 body: {
                     profile: {
                         username: editProfileData.username,
-                        email: editProfileData.email
+                        email: editProfileData.email,
+                        about: editProfileData.about
+                    }
+                }
+            }),
+            invalidatesTags: ["Profile"]
+        }),
+        changePassword: builder.mutation<void, ChangePasswordData>({
+            query: (changeData) => ({
+                url: `profile/${changeData.id}/password`,
+                method: 'PUT',
+                body: {
+                    profile: {
+                        old_password: changeData.oldPassword,
+                        password: changeData.password
+                    }
+                }
+            }),
+            invalidatesTags: ["Profile"]
+        }),
+        changeSettings: builder.mutation<void, ChangeSettingsData>({
+            query: (changeData) => ({
+                url: `profile/${changeData.id}`,
+                method: 'PUT',
+                body: {
+                    profile: {
+                        ui_style: changeData.uiStyle ? "true" : "false",
+                        privacy: changeData.privacy ? "true" : "false"
                     }
                 }
             }),
@@ -129,7 +181,10 @@ export const {
     useSignUpMutation,
     useSignInMutation,
     useRefreshSessionMutation,
+    useGetOwnProfileQuery,
     useGetProfileQuery,
     useDeleteProfileMutation,
-    useEditProfileMutation
+    useEditProfileMutation,
+    useChangePasswordMutation,
+    useChangeSettingsMutation
 } = usersApi;

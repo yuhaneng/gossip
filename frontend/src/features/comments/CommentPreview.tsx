@@ -1,7 +1,7 @@
 import { CommentData, useDeleteCommentMutation, useVoteCommentMutation } from "./commentsApi";
 import { useCheckCorrectUserRelax, useErrorAlert, useOnSuccess } from "../../app/hooks";
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Replies from "../replies/Replies";
 import { 
     Container,
@@ -20,16 +20,12 @@ import {
 
 export default function CommentPreview(props: {comment: CommentData}) {
     const comment = props.comment;
-    const isAuthor = useCheckCorrectUserRelax(comment ? comment.author : "");
+
+    // Is the signed in user the author of the comment, or an admin.
+    const isAuthor = useCheckCorrectUserRelax(comment ? comment.author_id : "");
+
+    // To toggle the options menu.
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-    const [showReplies, setShowReplies] = useState(false);
-    const [deleteComment, {isSuccess: deleteSuccess, error: deleteError}] = useDeleteCommentMutation();
-    const [voteComment, {error: voteError}] = useVoteCommentMutation();
-
-    useErrorAlert(deleteError);
-    useErrorAlert(voteError);
-    useOnSuccess(deleteSuccess, "Comment deleted successfully.", "")
-
     const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
         if (anchorEl === null) {
             setAnchorEl(event.currentTarget);
@@ -37,11 +33,24 @@ export default function CommentPreview(props: {comment: CommentData}) {
             setAnchorEl(null);
         }
     };
-
     const handleClose = () => {
         setAnchorEl(null);
     };
 
+    // To toggle replies list.
+    const [showReplies, setShowReplies] = useState(false);
+
+    // Get delete and vote trigger, isSuccess and error states.
+    const [deleteComment, {isSuccess: deleteSuccess, error: deleteError}] = useDeleteCommentMutation();
+    const [voteComment, {error: voteError}] = useVoteCommentMutation();
+
+    // Create error alerts if delete or vote fails.
+    useErrorAlert(deleteError);
+    useErrorAlert(voteError);
+    // Create success alert if delete successful.
+    useOnSuccess(deleteSuccess, "Comment deleted successfully.")
+
+    // Use vote mutation.
     function handleVote(vote: "up" | "down") {
         if (comment.user_vote === vote) {
             voteComment({id: comment.id, vote: "none"})
@@ -59,11 +68,12 @@ export default function CommentPreview(props: {comment: CommentData}) {
                 mb: 3, 
                 borderRadius: 2, 
                 p: 2,
-                border: '1px solid #EEE'
+                border: '1px solid #EEE',
+                borderColor: 'secondary.dark'
             }}
         >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, mb: 2 }}>
-                <Typography component="p" >
+                <Typography component="p" sx={{wordBreak: "break-all"}} >
                     {comment.content}
                 </Typography>
                 <Box>
@@ -94,7 +104,9 @@ export default function CommentPreview(props: {comment: CommentData}) {
                         onClick={handleMenu}
                         onClose={handleClose}
                     >
-                        <Link to={`/replies/create/${comment.post_id}/${comment.id}`} style={{textDecoration: 'none', color: 'inherit'}}>
+                        <Link to={`/replies/create/${comment.post_id}/${comment.id}`} 
+                            style={{textDecoration: 'none', color: 'inherit'}}
+                        >
                             <MenuItem>Reply Comment</MenuItem>
                         </Link>
                         {isAuthor && (

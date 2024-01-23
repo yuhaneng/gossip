@@ -12,11 +12,18 @@ import {
 } from '@mui/material';
 
 export default function CreateComment() {
+    // Redirect user to sign in page if not signed in.
     useCheckSignedIn();
-    const {postId = "0"} = useParams();
-    const [create, {isSuccess, error}] = useCreateCommentMutation();
+
     const dispatch = useAppDispatch();
 
+    // Get postId of the post the comment is under using the page's path.
+    const {postId = "0"} = useParams();
+
+    // Get create comment trigger, isSuccess and error states.
+    const [create, {isSuccess, error}] = useCreateCommentMutation();
+
+    // To handle form data and errors.
     interface FormData {
         content: string
     }
@@ -24,9 +31,13 @@ export default function CreateComment() {
         content: ""
     })
 
+    // Create error alert if create comment fails.
     useErrorAlert(error);
+
+    // Create success alert and redirect to new post page if create comment successful.
     useOnSuccess(isSuccess, "Comment created successfully.", `/posts/${postId}`);
 
+    // Validate form data and create error alert or use create comment mutation.
     function handleCreate() {
         const contentError = validateContent(formData.content);
         if (!contentError) {
@@ -86,7 +97,7 @@ export default function CreateComment() {
                         <Button
                             fullWidth
                             variant="contained"
-                            sx={{ mt: 3, mb: 2, bgcolor: '#BBB', '&:hover': { bgcolor: '#888'} }}
+                            sx={{ mt: 3, mb: 2, bgcolor: 'secondary.main', '&:hover': { bgcolor: 'secondary.dark'} }}
                         >
                             Cancel
                         </Button>

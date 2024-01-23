@@ -3,13 +3,15 @@ class CommentsController < ApplicationController
   before_action :authenticate_user, except: %i[ index show ]
   before_action :correct_user, only: %i[ update destroy ]
 
-  # GET /comments
+  # GET /comments?sort=:sort&page=:page&user=:user
+  # GET /comments?sort=:sort&page=:page&post=:post
+  # Get comments by user or post, sorted and paginated.
   def index
     if (params[:sort] && params[:page])
 
       # Get comments by username.
       if (params[:user])
-        user = User.find_by(username: params[:user])
+        user = User.find_by(id: params[:user])
         comments = user.comments if !user.nil?
 
       # Get comments by post.
@@ -45,11 +47,13 @@ class CommentsController < ApplicationController
   end
 
   # GET /comments/1
+  # Get comment by id.
   def show
     render json: create_comment_data(@comment)
   end
 
   # POST /comments
+  # Create new comment under current user and post specified by id.
   def create
     @comment = current_user.comments.build(comment_params)
     @post = Post.find_by(id: comment_params[:post_id])
@@ -63,6 +67,7 @@ class CommentsController < ApplicationController
   end
 
   # PATCH/PUT /comments/1
+  # Update comment by id.
   def update
     if @comment.update(edit_params)
       head :ok
@@ -72,6 +77,7 @@ class CommentsController < ApplicationController
   end
 
   # DELETE /comments/1
+  # Destroy comment by id.
   def destroy
     if @comment.destroy
       head :ok
@@ -81,6 +87,7 @@ class CommentsController < ApplicationController
   end
 
   # POST /comments/:id/vote
+  # Destroy old comment vote if exists, create new comment vote if upvoted or downvoted.
   def vote
     old_vote = current_user.comment_votes.find_by(comment_id: params[:id])
     old_vote.destroy! if !old_vote.nil?
@@ -98,6 +105,7 @@ class CommentsController < ApplicationController
   end
 
   private
+    # Set @comment to comment specified by id.
     def set_comment
       @comment = Comment.find(params[:id])
       render json: {error: "Could not find comment."}, status: :unprocessable_entity if @comment.nil?
@@ -115,12 +123,13 @@ class CommentsController < ApplicationController
       params.require(:vote).permit(:vote)
     end
 
-    # Check user is querying their own comment before allowing update or destroy.
+    # Check user is querying their own comment or is an admin before allowing update or destroy.
     def correct_user
       comment = current_user.comments.find_by(id: params[:id])
       render json: {error: "Not authorized to perform this action."}, status: :unauthorized if comment.nil? && !current_user.admin
     end
 
+    # Create comment data, including current user's vote.
     def create_comment_data(comment)
       if logged_in? 
         vote = current_user.comment_votes.find_by(comment_id: comment.id)
@@ -139,6 +148,7 @@ class CommentsController < ApplicationController
 
       comment_data = {
         id: comment.id,
+        author_id: !comment.user.nil? ? comment.user.id : "",
         author: !comment.user.nil? ? comment.user.username : "",
         post_id: comment.post_id,
         content: comment.content,

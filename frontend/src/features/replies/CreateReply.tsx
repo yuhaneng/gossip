@@ -11,12 +11,19 @@ import {
     TextField
 } from '@mui/material';
 
-export default function CreateComment() {
+export default function CreateReply() {
+    // Redirect user to sign in page if not signed in.
     useCheckSignedIn();
+
     const dispatch = useAppDispatch();
+
+    // Get post id and comment id from page's path.
     const {postId = "0", commentId = "0"} = useParams();
+
+    // Get create reply trigger, isSuccess and error states.
     const [create, {isSuccess, error}] = useCreateReplyMutation();
 
+    // Handle form data and errors.
     interface FormData {
         content: string
     }
@@ -24,9 +31,13 @@ export default function CreateComment() {
         content: ""
     })
 
+    // Create error alert if create reply fails.
     useErrorAlert(error);
+
+    // Create success alert and redirect to post page if create reply successful.
     useOnSuccess(isSuccess, "Reply created successfully.", `/posts/${postId}`);
 
+    // Validate form data and create error alert or use create reply mutation.
     function handleCreate() {
         const contentError = validateContent(formData.content);
         if (!contentError) {
@@ -86,7 +97,7 @@ export default function CreateComment() {
                         <Button
                             fullWidth
                             variant="contained"
-                            sx={{ mt: 3, mb: 2, bgcolor: '#BBB', '&:hover': { bgcolor: '#888'} }}
+                            sx={{ mt: 3, mb: 2, bgcolor: 'secondary.main', '&:hover': { bgcolor: 'secondary.dark'} }}
                         >
                             Cancel
                         </Button>

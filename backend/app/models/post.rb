@@ -9,7 +9,7 @@ class Post < ApplicationRecord
       errors.add(:tags, :invalid) if tags != tags.uniq
   end
 
-  belongs_to :user
+  belongs_to :user, optional: true
   has_many :comments
   has_many :post_votes
 end
