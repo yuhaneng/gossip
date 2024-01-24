@@ -49,7 +49,7 @@ interface ChangeSettingsData {
     privacy: boolean
 }
 
-export const API_URL = "http://localhost:3000/"
+export const API_URL = "https://gossip-api-udhc.onrender.com/"
 
 const usersApi = createApi({
     reducerPath: 'users',

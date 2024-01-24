@@ -49,6 +49,6 @@ class ApplicationController < ActionController::API
 
     # Authenticate access token.
     def authenticate_user
-        render json: {error: "Not logged in."}, status: :unauthorized if !logged_in?
+        render json: {error: "Not signed in."}, status: :unauthorized if !logged_in?
       end
 end
