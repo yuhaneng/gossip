@@ -30,8 +30,11 @@
 !/tmp/storage/.keep
 
 # Ignore production key for decrypting credentials and more.
-config/master.key
 config/credentials/production.key
 config/credentials/production.yml.enc
+
+# Commiting master key to repo for development collaboration.
+# Using environmental variable with different master key.
+# config/master.key
 
 *.DS_Store
