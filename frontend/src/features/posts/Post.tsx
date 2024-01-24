@@ -1,8 +1,9 @@
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useGetPostQuery, useDeletePostMutation, useVotePostMutation } from "./postsApi";
-import { useAutoSignIn, useCheckCorrectUserRelax, useErrorAlert, useOnSuccess } from '../../app/hooks';
+import { useCheckCorrectUserRelax, useErrorAlert, useOnSuccess } from '../../app/hooks';
 import { useState } from 'react';
 import Comments from '../comments/Comments';
+import Confirmation from '../alert/Confirmation';
 import {
     Container,
     Box,
@@ -44,6 +45,9 @@ export default function Post() {
         setAnchorEl(null);
     };
 
+    // To toggle the confirmation menu.
+    const [openConfirm, setOpenConfirm] = useState(false);
+
     // Create error alerts if get, delete or vote post fails.
     useErrorAlert(postError);
     useErrorAlert(deleteError);
@@ -76,6 +80,13 @@ export default function Post() {
             >
                 {post && (
                     <Box >
+                        <Confirmation 
+                            title="Confirm Delete" 
+                            content="Are you sure you want to delete this post?" 
+                            open={openConfirm}
+                            setOpen={setOpenConfirm}
+                            action={() => deletePost(id)}
+                        />
                         <Box sx={{border: '1px solid #EEE', borderColor: 'secondary.dark', p: 4, borderRadius: 3}}>
                             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                 <Typography variant="h3" component="h2" sx={{fontSize: '2em', fontWeight: 800, mb: 0.5, wordBreak: 'break-all'}}>
@@ -112,7 +123,7 @@ export default function Post() {
                                         <MenuItem>Edit Post</MenuItem>
                                     </Link>
 
-                                    <MenuItem onClick={() => deletePost(id)}>Delete Post</MenuItem>
+                                    <MenuItem onClick={() => setOpenConfirm(true)}>Delete Post</MenuItem>
                                 </Menu>
                                 </Box>}
                             </Box>

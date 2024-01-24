@@ -5,6 +5,8 @@ import { resetPosts } from '../posts/postsApi';
 import { resetComments } from '../comments/commentsApi';
 import { resetReplies } from '../replies/repliesApi';
 import { selectId, updateUser } from './usersSlice';
+import { useState } from 'react';
+import Confirmation from '../alert/Confirmation';
 import {
     Container,
     Box,
@@ -27,6 +29,9 @@ export default function Profile() {
 
     // Get delete profile trigger, isSuccess and error states.
     const [deleteProfile, {isSuccess: deleteSuccess, error: deleteError}] = useDeleteProfileMutation();
+
+    // To toggle the confirmation menu.
+    const [openConfirm, setOpenConfirm] = useState(false);
 
     // Is the signed in user the owner of the profile or an admin.
     const isCorrectUser = useCheckCorrectUserRelax(id);
@@ -60,6 +65,13 @@ export default function Profile() {
                 alignItems: 'center'
                 }}
             >
+                <Confirmation
+                    title="Confirm Delete"
+                    content="Are you sure you want to delete this profile?"
+                    open={openConfirm}
+                    setOpen={setOpenConfirm}
+                    action={() => deleteProfile(id)}
+                />
                 <Avatar sx={{
                     width: 100, 
                     height: 100, 
@@ -104,7 +116,7 @@ export default function Profile() {
                             size="small" 
                             variant="contained" 
                             color="error" 
-                            onClick={() => deleteProfile(id)}
+                            onClick={() => setOpenConfirm(true)}
                             sx={{width: 140}}>
                             Delete Profile
                         </Button>

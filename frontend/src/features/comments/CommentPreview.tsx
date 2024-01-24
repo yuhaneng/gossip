@@ -3,6 +3,7 @@ import { useCheckCorrectUserRelax, useErrorAlert, useOnSuccess } from "../../app
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import Replies from "../replies/Replies";
+import Confirmation from "../alert/Confirmation";
 import { 
     Container,
     Box,
@@ -36,6 +37,9 @@ export default function CommentPreview(props: {comment: CommentData}) {
     const handleClose = () => {
         setAnchorEl(null);
     };
+
+    // To toggle the confirmation menu.
+    const [openConfirm, setOpenConfirm] = useState(false);
 
     // To toggle replies list.
     const [showReplies, setShowReplies] = useState(false);
@@ -73,6 +77,13 @@ export default function CommentPreview(props: {comment: CommentData}) {
             }}
         >
             <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, mb: 2 }}>
+                <Confirmation
+                    title="Confirm Delete"
+                    content="Are you sure you want to delete this comment?"
+                    open={openConfirm}
+                    setOpen={setOpenConfirm}
+                    action={() => deleteComment(comment.id)}
+                />
                 <Typography component="p" sx={{wordBreak: "break-all"}} >
                     {comment.content}
                 </Typography>
@@ -114,7 +125,7 @@ export default function CommentPreview(props: {comment: CommentData}) {
                                 <Link to={`/comments/${comment.id}/edit`} style={{textDecoration: 'none', color: 'inherit'}}>
                                     <MenuItem>Edit Comment</MenuItem>
                                 </Link>
-                                <MenuItem onClick={() => deleteComment(comment.id)}>Delete Comment</MenuItem>
+                                <MenuItem onClick={() => setOpenConfirm(true)}>Delete Comment</MenuItem>
                             </Box>
                         )}
                     </Menu>

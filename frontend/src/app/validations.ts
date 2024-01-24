@@ -87,6 +87,8 @@ export function validateTag(tag: string, tags: string[]) {
         error = "Tag too long. Maximum 10 characters."
     } else if (tags.includes(tag)) {
         error = "Tag must be unique."
+    } else if (tags.length >= 10) {
+        error = "Too many tags. Maximum 10 tags."
     }
     return error;
 }

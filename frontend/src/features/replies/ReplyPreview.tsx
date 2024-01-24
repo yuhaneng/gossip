@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { useAppDispatch, useCheckCorrectUserRelax, useErrorAlert, useOnSuccess } from "../../app/hooks";
+import { useCheckCorrectUserRelax, useErrorAlert, useOnSuccess } from "../../app/hooks";
 import { ReplyData, useDeleteReplyMutation, useVoteReplyMutation } from "./repliesApi";
-import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
+import Confirmation from "../alert/Confirmation";
 import { 
     Container,
     Box,
@@ -27,11 +27,18 @@ export default function ReplyPreview(props: {reply: ReplyData}) {
     // To toggle options menu.
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
-        setAnchorEl(event.currentTarget);
+        if (anchorEl === null) {
+            setAnchorEl(event.currentTarget);
+        } else {
+            setAnchorEl(null);
+        }
     };
     const handleClose = () => {
         setAnchorEl(null);
     };
+
+    // To toggle confirmation menu.
+    const [openConfirm, setOpenConfirm] = useState(false);
 
     // Get delete and vote reply triggers, isSuccess and error states.
     const [deleteReply, {isSuccess: deleteSuccess, error: deleteError}] = useDeleteReplyMutation();
@@ -63,6 +70,13 @@ export default function ReplyPreview(props: {reply: ReplyData}) {
                 mt: 2
             }}
         >
+            <Confirmation
+                title="Confirm Delete"
+                content="Are you sure you want to delete this reply?"
+                open={openConfirm}
+                setOpen={setOpenConfirm}
+                action={() => deleteReply(reply.id)}
+            />
             <Grid container gap={1}>
                 <Grid item xs={10}>
                     <Typography component="p" sx={{wordBreak: "break-all"}}>
@@ -101,7 +115,7 @@ export default function ReplyPreview(props: {reply: ReplyData}) {
                                 <MenuItem>Edit Reply</MenuItem>
                             </Link>
 
-                            <MenuItem onClick={() => deleteReply(reply.id)}>Delete Reply</MenuItem>
+                            <MenuItem onClick={() => setOpenConfirm(true)}>Delete Reply</MenuItem>
                         </Menu>
                     </Box>}
                 </Grid>

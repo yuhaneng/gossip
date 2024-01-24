@@ -3,6 +3,7 @@ import { useGetPostsByTagsQuery } from "./postsApi";
 import { useErrorAlert, useScroll } from "../../app/hooks";
 import Tag from "./Tag";
 import PostPreview from './PostPreview';
+import { validateTag } from "../../app/validations";
 import {
     Container,
     Box,
@@ -89,7 +90,11 @@ export default function Posts() {
                         ),
                         endAdornment: (
                             <InputAdornment position="end">
-                                <Button variant="text" onClick={handleAddTag} disabled={searchbar.length === 0}>
+                                <Button 
+                                    variant="text" 
+                                    onClick={handleAddTag}
+                                    disabled={!!validateTag(searchbar, tags)}
+                                >
                                     Add Tag
                                 </Button>
                             </InputAdornment>

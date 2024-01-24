@@ -1,4 +1,4 @@
-import { createBrowserRouter, Outlet } from 'react-router-dom';
+import { createBrowserRouter, Outlet, redirect } from 'react-router-dom';
 import App from '../App';
 import ErrorPage from '../ErrorPage';
 import SignUp from '../features/users/SignUp';
@@ -8,7 +8,6 @@ import EditProfile from '../features/profile/EditProfile';
 import UserPosts from '../features/profile/UserPosts';
 import Settings from '../features/profile/Settings';
 import ChangePassword from '../features/profile/ChangePassword';
-import SignOut from '../features/users/SignOut';
 import CreatePost from '../features/posts/CreatePost';
 import EditPost from '../features/posts/EditPost';
 import Post from '../features/posts/Post';
@@ -18,12 +17,17 @@ import EditComment from '../features/comments/EditComment';
 import CreateReply from '../features/replies/CreateReply';
 import EditReply from '../features/replies/EditReply';
 
+
 export default createBrowserRouter([
     {
       path: '/',
       element: <App />,
       errorElement: <ErrorPage />,
       children: [
+        {
+          path: '/',
+          loader: () => redirect('/posts')
+        },
         {
           path: 'users',
           element: <Outlet />,
@@ -35,10 +39,6 @@ export default createBrowserRouter([
             {
               path: 'signin',
               element: <SignIn />
-            },
-            {
-              path: 'signout',
-              element: <SignOut />
             }
           ]
         },
