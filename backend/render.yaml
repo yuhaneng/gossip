@@ -9,7 +9,7 @@ services:
     name: gossipapi
     runtime: ruby
     plan: free
-    buildCommand: "./bin/render-build.sh; ./bin/rails db:migrate; ./bin/rails db:seed;"
+    buildCommand: "./bin/render-build.sh; ./bin/rails db:migrate;"
     startCommand: "./bin/rails server"
     envVars:
       - key: DATABASE_URL
