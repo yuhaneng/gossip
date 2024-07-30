@@ -33,8 +33,8 @@ export interface AuthData {
 
 export interface ProfileData extends EditProfileData {
     created_at: string,
-    ui_style: boolean,
-    privacy: boolean
+    ui_style: string,
+    is_private: boolean
 }
 
 interface ChangePasswordData {
@@ -45,11 +45,11 @@ interface ChangePasswordData {
 
 interface ChangeSettingsData {
     id: string,
-    uiStyle: boolean,
-    privacy: boolean
+    uiStyle: string,
+    isPrivate: boolean
 }
 
-export const API_URL = "https://gossip-api-udhc.onrender.com/"
+export const API_URL = "http://localhost:3001"
 
 const usersApi = createApi({
     reducerPath: 'users',
@@ -86,11 +86,9 @@ const usersApi = createApi({
                 url: signUpData.remember ? "signup?remember=yes": "signup",
                 method: 'POST',
                 body: {
-                    user: {
-                        username: signUpData.username,
-                        email: signUpData.email,
-                        password: signUpData.password
-                    }
+                    username: signUpData.username,
+                    email: signUpData.email,
+                    password: signUpData.password
                 },
             }),
             invalidatesTags: ["Profile"]
@@ -100,10 +98,8 @@ const usersApi = createApi({
                 url: signInData.remember ? "signin?remember=yes": "signin",
                 method: 'POST',
                 body: {
-                    user: {
-                        username: signInData.username,
-                        password: signInData.password
-                    }
+                    username: signInData.username,
+                    password: signInData.password
                 }
             }),
             invalidatesTags: ["Profile"]
@@ -116,7 +112,7 @@ const usersApi = createApi({
             invalidatesTags: ["Profile"]
         }),
         getOwnProfile: builder.query<ProfileData, void>({
-            query: () => 'profile/self',
+            query: () => 'profile/',
             providesTags: ["Profile"]
         }),
         getProfile: builder.query<ProfileData, string>({
@@ -135,11 +131,9 @@ const usersApi = createApi({
                 url: `profile/${editProfileData.id}`,
                 method: 'PUT',
                 body: {
-                    profile: {
-                        username: editProfileData.username,
-                        email: editProfileData.email,
-                        about: editProfileData.about
-                    }
+                    username: editProfileData.username,
+                    email: editProfileData.email,
+                    about: editProfileData.about
                 }
             }),
             invalidatesTags: ["Profile"]
@@ -149,10 +143,8 @@ const usersApi = createApi({
                 url: `profile/${changeData.id}/password`,
                 method: 'PUT',
                 body: {
-                    profile: {
-                        old_password: changeData.oldPassword,
-                        password: changeData.password
-                    }
+                    old_password: changeData.oldPassword,
+                    password: changeData.password
                 }
             }),
             invalidatesTags: ["Profile"]
@@ -162,10 +154,8 @@ const usersApi = createApi({
                 url: `profile/${changeData.id}`,
                 method: 'PUT',
                 body: {
-                    profile: {
-                        ui_style: changeData.uiStyle ? "true" : "false",
-                        privacy: changeData.privacy ? "true" : "false"
-                    }
+                    ui_style: changeData.uiStyle,
+                    is_private: changeData.isPrivate
                 }
             }),
             invalidatesTags: ["Profile"]

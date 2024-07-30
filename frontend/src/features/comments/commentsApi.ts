@@ -54,7 +54,7 @@ const commentsApi = createApi({
     tagTypes: ["Comment"],
     endpoints: (builder) => ({
         getCommentsByPost: builder.query<CommentData[], GetCommentsByPostData>({
-            query: (getData) => `?post_id=${getData.postId}&page=${getData.page}&sort=${getData.sortBy}`,
+            query: (getData) => `?post=${getData.postId}&page=${getData.page}&sort=${getData.sortBy}`,
             providesTags: (result = [], error, arg) => ["Comment",
                 ...result.map((comment) => ({type: "Comment" as const, id: comment.id}))
             ]
@@ -74,10 +74,8 @@ const commentsApi = createApi({
                 url: '/',
                 method: 'POST',
                 body: {
-                    comment: {
-                        post_id: createData.postId,
-                        content: createData.content,
-                    }
+                    post: createData.postId,
+                    content: createData.content,
                 }
             }),
             invalidatesTags: ["Comment"]
@@ -87,9 +85,7 @@ const commentsApi = createApi({
                 url: `/${editData.id}`,
                 method: 'PUT',
                 body: {
-                    comment: {
-                        content: editData.content
-                    }
+                    content: editData.content
                 }
             }),
             invalidatesTags: (result, error, arg) => [{type: "Comment", id: arg.id}]
@@ -106,9 +102,7 @@ const commentsApi = createApi({
                 url: `/${voteData.id}/vote`,
                 method: "POST",
                 body: {
-                    vote: {
-                        vote: voteData.vote
-                    }
+                    vote: voteData.vote
                 }
             }),
             invalidatesTags: (result, error, arg) => [{type: "Comment", id: arg.id}]

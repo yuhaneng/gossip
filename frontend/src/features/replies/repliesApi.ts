@@ -53,7 +53,7 @@ const repliesApi = createApi({
     tagTypes: ["Reply"],
     endpoints: (builder) => ({
         getRepliesByComment: builder.query<ReplyData[], GetRepliesByCommentData>({
-            query: (getData) => `?comment_id=${getData.commentId}&page=${getData.page}`,
+            query: (getData) => `?comment=${getData.commentId}&page=${getData.page}`,
             providesTags: (result = [], error, arg) => ["Reply",
                 ...result.map((reply) => ({type: "Reply" as const, id: reply.id}))
             ]
@@ -73,10 +73,8 @@ const repliesApi = createApi({
                 url: '/',
                 method: 'POST',
                 body: {
-                    reply: {
-                        comment_id: createData.commentId,
-                        content: createData.content,
-                    }
+                    comment: createData.commentId,
+                    content: createData.content,
                 }
             }),
             invalidatesTags: ["Reply"]
@@ -86,9 +84,7 @@ const repliesApi = createApi({
                 url: `/${editData.id}`,
                 method: 'PUT',
                 body: {
-                    reply: {
-                        content: editData.content
-                    }
+                    content: editData.content
                 }
             }),
             invalidatesTags: (result, error, arg) => [{type: "Reply", id: arg.id}]
@@ -105,9 +101,7 @@ const repliesApi = createApi({
                 url: `/${voteData.id}/vote`,
                 method: "POST",
                 body: {
-                    vote: {
-                        vote: voteData.vote
-                    }
+                    vote: voteData.vote
                 }
             }),
             invalidatesTags: (result, error, arg) => [{type: "Reply", id: arg.id}]

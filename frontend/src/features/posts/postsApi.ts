@@ -72,11 +72,9 @@ const postsApi = createApi({
                 url: '/',
                 method: 'POST',
                 body: {
-                    post: {
-                        title: createData.title,
-                        content: createData.content,
-                        tags: createData.tags
-                    }
+                    title: createData.title,
+                    content: createData.content,
+                    tags: createData.tags
                 }
             }),
             invalidatesTags: ["Post"]
@@ -86,11 +84,9 @@ const postsApi = createApi({
                 url: `/${editData.id}`,
                 method: 'PUT',
                 body: {
-                    post: {
-                        title: editData.title,
-                        content: editData.content,
-                        tags: editData.tags
-                    }
+                    title: editData.title,
+                    content: editData.content,
+                    tags: editData.tags
                 }
             }),
             invalidatesTags: (result, error, arg) => [{type: "Post", id: arg.id}]
@@ -107,9 +103,7 @@ const postsApi = createApi({
                 url: `/${voteData.id}/vote`,
                 method: "POST",
                 body: {
-                    vote: {
-                        vote: voteData.vote
-                    }
+                    vote: voteData.vote
                 }
             }),
             invalidatesTags: (result, error, arg) => ["Post", {type: "Post", id: arg.id}]

@@ -25,14 +25,14 @@ export default function Settings() {
     const {data: profile} = useGetProfileQuery(id);
 
     // Form data state.
-    const [uiStyle, setUiStyle] = useState(false);
-    const [privacy, setPrivacy] = useState(false);
+    const [uiStyle, setUiStyle] = useState("light");
+    const [isPrivate, setIsPrivate] = useState(false);
 
     // Autofill form data when profile is received.
     useEffect(() => {
         if (profile) {
             setUiStyle(profile.ui_style);
-            setPrivacy(profile.privacy)
+            setIsPrivate(profile.is_private)
         }
     }, [profile])
 
@@ -44,9 +44,9 @@ export default function Settings() {
         change({
             id: id,
             uiStyle: uiStyle,
-            privacy: privacy
+            isPrivate: isPrivate
         })
-    }, [uiStyle, privacy])
+    }, [uiStyle, isPrivate])
     
     return (
         <Container maxWidth="sm"> 
@@ -74,8 +74,8 @@ export default function Settings() {
                         </Grid>
                         <Grid item xs={4}>
                             <Switch 
-                                checked={uiStyle} 
-                                onClick={() => setUiStyle(!uiStyle)}
+                                checked={uiStyle === "dark"} 
+                                onClick={() => setUiStyle(uiStyle === "light" ? "dark" : "light")}
                             />
                         </Grid>
                         <Grid item xs={4}>
@@ -97,8 +97,8 @@ export default function Settings() {
                         </Grid>
                         <Grid item xs={4}>
                             <Switch 
-                                checked={privacy}
-                                onClick={() => setPrivacy(!privacy)}
+                                checked={isPrivate}
+                                onClick={() => setIsPrivate(!isPrivate)}
                             />
                         </Grid>
                         <Grid item xs={4}>

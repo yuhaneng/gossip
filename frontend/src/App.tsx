@@ -43,7 +43,7 @@ export default function App() {
   const canRefresh = useAppSelector(selectCanRefresh);
   const {data} = useGetOwnProfileQuery();
   return (
-    <ThemeProvider theme={data && data.ui_style ? darkTheme : lightTheme}>
+    <ThemeProvider theme={data && data.ui_style === "dark" ? darkTheme : lightTheme}>
       <CssBaseline />
       {showCookies && (
         <div>

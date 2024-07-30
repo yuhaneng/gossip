@@ -75,6 +75,11 @@ export default function CreatePost() {
 				alert: contentError
 			}));
         } else {
+            console.log({
+                title: formData.title,
+                content: formData.content,
+                tags: formData.tags
+            })
             create({
                 title: formData.title,
                 content: formData.content,
