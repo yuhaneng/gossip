@@ -41,7 +41,7 @@ export interface CommentData extends Omit<EditCommentData, 'postId'> {
 const commentsApi = createApi({
     reducerPath: 'comments',
     baseQuery: fetchBaseQuery( {
-        baseUrl: process.env.REACT_APP_API_URL + '/comments',
+        baseUrl: import.meta.env.VITE_API_URL + '/comments',
         prepareHeaders: (headers) => {
             const token = Cookies.get("accessToken");
             if (token) {

@@ -29,14 +29,6 @@ router.put('/:id', auth({strict: true}), (req, res) => {
     const userId = req.user.id
     const userRole = req.user.role
 
-    console.log({
-        username: req.body.username,
-        email: req.body.email,
-        about: req.body.about,
-        uiStyle: req.body.ui_style,
-        isPrivate: req.body.is_private
-    })
-
     const profileId = req.params.id
     if (userRole !== "admin" && userId !== profileId) {
         return res.sendStatus(403)

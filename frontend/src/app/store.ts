@@ -6,8 +6,6 @@ import postsApi from '../features/posts/postsApi';
 import commentsApi from '../features/comments/commentsApi';
 import repliesApi from '../features/replies/repliesApi';
 
-export const API_URL = "http://localhost:3000/";
-
 export const store = configureStore({
   reducer: {
     [usersApi.reducerPath]: usersApi.reducer,

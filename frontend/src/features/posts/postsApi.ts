@@ -41,7 +41,7 @@ export interface PostData extends EditPostData {
 const postsApi = createApi({
     reducerPath: 'posts',
     baseQuery: fetchBaseQuery( {
-        baseUrl: process.env.REACT_APP_API_URL + '/posts',
+        baseUrl: import.meta.env.VITE_API_URL + '/posts',
         prepareHeaders: (headers) => {
             const token = Cookies.get("accessToken");
             if (token) {

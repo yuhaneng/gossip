@@ -2,13 +2,9 @@ import { Outlet } from 'react-router-dom';
 import Topbar from './features/topbar/Topbar'
 import AlertBox from './features/alert/AlertBox';
 import './App.css';
-import { useAppSelector, useAutoSignIn } from './app/hooks';
-import Cookies from 'js-cookie';
-import { selectCanRefresh, selectIsSignedIn } from './features/profile/usersSlice';
+import { useAutoSignIn } from './app/hooks';
 import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
 import { useGetOwnProfileQuery } from './features/users/usersApi';
-
-const showCookies = false;
 
 const lightTheme = createTheme({
   palette: {
@@ -39,25 +35,10 @@ const darkTheme = createTheme({
 
 export default function App() {
   useAutoSignIn();
-  const isSignedIn = useAppSelector(selectIsSignedIn);
-  const canRefresh = useAppSelector(selectCanRefresh);
   const {data} = useGetOwnProfileQuery();
   return (
     <ThemeProvider theme={data && data.ui_style === "dark" ? darkTheme : lightTheme}>
       <CssBaseline />
-      {showCookies && (
-        <div>
-          {Cookies.get("username")}<br />
-          {Cookies.get("id")}<br />
-          {Cookies.get("accessToken")}<br />
-          {Cookies.get("refreshToken")}<br />
-          {Cookies.get("accessExpiry")}<br />
-          {Cookies.get("refreshExpiry")}<br />
-          {Math.round(Date.now() / 1000)}<br />
-          {isSignedIn ? "Signed In" : "Not Signed In"} <br />
-        {canRefresh ? "Can Refresh" : "Cannot Refresh"} <br />
-        </div>
-      )}
       <Topbar />
       <AlertBox />
       <Outlet />

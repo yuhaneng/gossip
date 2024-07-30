@@ -40,7 +40,7 @@ export interface ReplyData extends  Omit<EditReplyData, 'commentId'> {
 const repliesApi = createApi({
     reducerPath: 'replies',
     baseQuery: fetchBaseQuery( {
-        baseUrl: process.env.REACT_APP_API_URL + '/replies',
+        baseUrl: import.meta.env.VITE_API_URL + '/replies',
         prepareHeaders: (headers) => {
             const token = Cookies.get("accessToken");
             if (token) {

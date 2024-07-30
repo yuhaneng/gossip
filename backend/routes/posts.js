@@ -31,7 +31,7 @@ router.get('/', auth({strict: false}), (req, res) => {
     }
 
     Post.find(where)
-        .sort(sort === "rating" ? {numUpvotes: 1} : {createdAt: -1})
+        .sort(sort === "rating" ? {numUpvotes: -1} : {createdAt: -1})
         .limit(page * perPage)
         .then((posts) => Promise.all(posts.map((post) => postData(post, userId))))
         .then((datas) => res.json(datas))
