@@ -1,6 +1,5 @@
 import Cookies from "js-cookie";
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { API_URL } from "../users/usersApi";
 
 export interface GetCommentsByPostData {
     page: number,
@@ -42,7 +41,7 @@ export interface CommentData extends Omit<EditCommentData, 'postId'> {
 const commentsApi = createApi({
     reducerPath: 'comments',
     baseQuery: fetchBaseQuery( {
-        baseUrl: API_URL + '/comments',
+        baseUrl: process.env.REACT_APP_API_URL + '/comments',
         prepareHeaders: (headers) => {
             const token = Cookies.get("accessToken");
             if (token) {

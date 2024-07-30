@@ -49,12 +49,10 @@ interface ChangeSettingsData {
     isPrivate: boolean
 }
 
-export const API_URL = "http://localhost:3001"
-
 const usersApi = createApi({
     reducerPath: 'users',
     baseQuery: fetchBaseQuery( {
-        baseUrl: API_URL,
+        baseUrl: process.env.REACT_APP_API_URL,
         prepareHeaders: (headers, {endpoint}) => {
             const accessEndpoints = [
                 'getProfile', 
